@@ -1,0 +1,638 @@
+import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  User, GraduationCap, Star, Languages, FileText,
+  Briefcase, ChevronDown, ChevronUp, Plus, X, Settings2, GripVertical,
+  Heart, BookOpen, Users, Building2, Library, Check,
+} from 'lucide-react';
+import { useResume } from '../../../context/ResumeContext';
+import FormField from '../FormField';
+import RichTextEditor from '../RichTextEditor';
+import SkillLevelSlider from '../SkillLevelSlider';
+
+const TEMPLATES = [
+  { label: 'Riga', value: 'riga' },
+  { label: 'Modern', value: 'modern' },
+  { label: 'Classic', value: 'classic' },
+  { label: 'Minimal', value: 'minimal' },
+];
+const FONTS = ['Montserrat (default)', 'Inter', 'Roboto', 'Lato', 'Open Sans'];
+const BODY_FONTS = ['Crimson Text (default)', 'Georgia', 'Merriweather', 'Libre Baskerville'];
+const ACCENT_COLORS = ['#C8A84B', '#000000', '#2563EB', '#DC2626', '#059669', '#7C3AED'];
+const LANG_LEVELS = ['Superior/Native', 'Highly Proficient', 'Very Good', 'Good Working', 'Working Knowledge'];
+const LEVELS = ['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'];
+
+const DEFAULT_SECTION_ORDER = [
+  'personalInfo', 'experience', 'education', 'skills', 'summary', 'languages', 'personalDetails',
+];
+
+const BLOCKS = [
+  { key: 'hobbies', label: 'Hobbies', icon: Heart },
+  { key: 'courses', label: 'Courses', icon: BookOpen },
+  { key: 'references', label: 'References', icon: Users },
+  { key: 'internships', label: 'Internships', icon: Building2 },
+  { key: 'publications', label: 'Publications', icon: Library },
+  { key: 'custom', label: 'Custom Section', icon: Plus },
+];
+
+function SectionHeader({ icon: Icon, title, dragHandleProps }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-5">
+      <div
+        {...dragHandleProps}
+        className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-gray-300 hover:text-gray-500 transition-colors"
+        title="Drag to reorder"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+      <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+        <Icon className="w-4 h-4 text-blue-600" />
+      </div>
+      <h2 className="text-base font-bold text-gray-800">{title}</h2>
+    </div>
+  );
+}
+
+function AccordionItem({ label, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-gray-100 last:border-0">
+      <button
+        type="button"
+        className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 transition-colors px-1"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="text-sm text-gray-600">{label}</span>
+        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+      </button>
+      {open && <div className="px-1 pb-4">{children}</div>}
+    </div>
+  );
+}
+
+function SortableSection({ id, children }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+    >
+      {children({ dragHandleProps: { ...attributes, ...listeners } })}
+    </div>
+  );
+}
+
+function PersonalInfoSection({ dragHandleProps }) {
+  const { resume, updatePersonalInfo } = useResume();
+  const p = resume.personalInfo;
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={User} title="Personal Information" dragHandleProps={dragHandleProps} />
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Job Title" value={p.jobTitle} onChange={(v) => updatePersonalInfo({ jobTitle: v })} className="col-span-2" />
+        <FormField label="First Name" value={p.firstName} onChange={(v) => updatePersonalInfo({ firstName: v })} />
+        <FormField label="Last Name" value={p.lastName} onChange={(v) => updatePersonalInfo({ lastName: v })} />
+        <FormField label="Email" value={p.email} onChange={(v) => updatePersonalInfo({ email: v })} />
+        <FormField label="Phone" value={p.phone} onChange={(v) => updatePersonalInfo({ phone: v })} />
+        <FormField label="Address" value={p.address} onChange={(v) => updatePersonalInfo({ address: v })} className="col-span-2" />
+        <FormField label="City" value={p.city} onChange={(v) => updatePersonalInfo({ city: v })} />
+        <FormField label="Postal Code" value={p.postalCode} onChange={(v) => updatePersonalInfo({ postalCode: v })} />
+        <FormField label="Country" value={p.country} onChange={(v) => updatePersonalInfo({ country: v })} />
+      </div>
+    </div>
+  );
+}
+
+function EducationSection({ dragHandleProps }) {
+  const { resume, updateEducation } = useResume();
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={GraduationCap} title="Education" dragHandleProps={dragHandleProps} />
+      <p className="text-sm text-blue-500 mb-3">Write your schools or courses you finished.</p>
+      {resume.education.map((edu) => (
+        <AccordionItem
+          key={edu.id}
+          label={[edu.degree, edu.school, edu.gradYear].filter(Boolean).join(' at ').trim() || 'Education entry'}
+        >
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="School" value={edu.school} onChange={(v) => updateEducation(resume.education.map((e) => e.id === edu.id ? { ...e, school: v } : e))} className="col-span-2" />
+            <FormField label="Degree" value={edu.degree} onChange={(v) => updateEducation(resume.education.map((e) => e.id === edu.id ? { ...e, degree: v } : e))} />
+            <FormField label="City" value={edu.city} onChange={(v) => updateEducation(resume.education.map((e) => e.id === edu.id ? { ...e, city: v } : e))} />
+          </div>
+        </AccordionItem>
+      ))}
+    </div>
+  );
+}
+
+function SkillsSection({ dragHandleProps }) {
+  const { resume, updateSkills } = useResume();
+  const normSkills = (resume.skills || []).map((s) =>
+    typeof s === 'string' ? { id: s, name: s, level: 3 } : { ...s, level: typeof s.level === 'string' ? 3 : (s.level ?? 3) }
+  );
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={Star} title="Skills" dragHandleProps={dragHandleProps} />
+      <p className="text-sm text-blue-500 mb-3">Pick 6 skills that match the job ad.</p>
+      {normSkills.map((skill) => (
+        <AccordionItem key={skill.id} label={`${skill.name || 'Skill'}, ${LEVELS[(skill.level ?? 3) - 1]}`}>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="w-52">
+              <FormField label="Skill" value={skill.name} onChange={(v) => updateSkills(normSkills.map((s) => s.id === skill.id ? { ...s, name: v } : s))} />
+            </div>
+            <SkillLevelSlider level={skill.level} onChange={(v) => updateSkills(normSkills.map((s) => s.id === skill.id ? { ...s, level: v } : s))} />
+          </div>
+        </AccordionItem>
+      ))}
+    </div>
+  );
+}
+
+function LanguagesSection({ dragHandleProps }) {
+  const { resume, updateLanguages } = useResume();
+  const langs = resume.languages || [];
+  const addLang = () => updateLanguages([...langs, { id: Date.now(), name: '', level: 'Superior/Native' }]);
+  const removeLang = (id) => updateLanguages(langs.filter((l) => l.id !== id));
+  const updateLang = (id, field, val) => updateLanguages(langs.map((l) => (l.id === id ? { ...l, [field]: val } : l)));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={Languages} title="Languages" dragHandleProps={dragHandleProps} />
+      <div className="space-y-2 mb-3">
+        {langs.map((lang) => (
+          <AccordionItem key={lang.id} label={`${lang.name || 'Language'}, ${lang.level}`}>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <FormField label="Language" value={lang.name} onChange={(v) => updateLang(lang.id, 'name', v)} />
+              <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                <div className="flex-1 px-3 py-2">
+                  <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1">Level</label>
+                  <select value={lang.level} onChange={(e) => updateLang(lang.id, 'level', e.target.value)} className="w-full outline-none text-gray-800 text-sm bg-transparent">
+                    {LANG_LEVELS.map((l) => <option key={l}>{l}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button type="button" onClick={() => removeLang(lang.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+          </AccordionItem>
+        ))}
+      </div>
+      <button type="button" onClick={addLang} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700">
+        <Plus className="w-4 h-4" /> Add Language
+      </button>
+    </div>
+  );
+}
+
+function PersonalDetailsSection({ dragHandleProps }) {
+  const { resume, updatePersonalDetails } = useResume();
+  const pd = resume.personalDetails || {};
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={User} title="Personal Details" dragHandleProps={dragHandleProps} />
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Nationality" value={pd.nationality} onChange={(v) => updatePersonalDetails({ nationality: v })} placeholder="Indian" />
+        <FormField label="Date of Birth" value={pd.dob} onChange={(v) => updatePersonalDetails({ dob: v })} placeholder="DD/MM/YYYY" />
+        <FormField label="Visa Status" value={pd.visaStatus} onChange={(v) => updatePersonalDetails({ visaStatus: v })} placeholder="Approved" />
+        <FormField label="Marital Status" value={pd.maritalStatus} onChange={(v) => updatePersonalDetails({ maritalStatus: v })} placeholder="Single" />
+      </div>
+    </div>
+  );
+}
+
+function SummarySection({ dragHandleProps }) {
+  const { resume, updateSummary } = useResume();
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={FileText} title="Professional Summary" dragHandleProps={dragHandleProps} />
+      <p className="text-sm text-blue-500 mb-3">Write 2–4 short lines about your work, wins, and skills.</p>
+      <RichTextEditor value={resume.summary} onChange={updateSummary} label="SUMMARY" placeholder="Write your professional summary here…" />
+    </div>
+  );
+}
+
+function ExperienceSection({ dragHandleProps }) {
+  const { resume, updateExperience } = useResume();
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <SectionHeader icon={Briefcase} title="Employment History" dragHandleProps={dragHandleProps} />
+      <p className="text-sm text-blue-500 mb-3">Write your jobs (recent ones) with short points of what you did.</p>
+      {resume.experience.map((job) => (
+        <AccordionItem
+          key={job.id}
+          label={[job.title, job.company, job.startDate, job.current ? 'Present' : job.endDate].filter(Boolean).join(', ')}
+        >
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Job Title" value={job.title} onChange={(v) => updateExperience(resume.experience.map((j) => j.id === job.id ? { ...j, title: v } : j))} />
+            <FormField label="Employer" value={job.company} onChange={(v) => updateExperience(resume.experience.map((j) => j.id === job.id ? { ...j, company: v } : j))} />
+          </div>
+        </AccordionItem>
+      ))}
+      <button type="button" className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-3">
+        <Plus className="w-4 h-4" /> Add Employment
+      </button>
+    </div>
+  );
+}
+
+// Extra block sections
+function HobbiesBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const hobbies = resume.hobbies || '';
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Heart className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Hobbies</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      <FormField label="Hobbies" value={hobbies} onChange={(v) => setResume((r) => ({ ...r, hobbies: v }))} placeholder="e.g. Reading, Hiking, Photography" className="col-span-2" />
+    </div>
+  );
+}
+
+function CoursesBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const courses = resume.courses || [];
+  const addCourse = () => setResume((r) => ({ ...r, courses: [...(r.courses || []), { id: Date.now(), name: '', institution: '', year: '' }] }));
+  const updateCourse = (id, field, val) => setResume((r) => ({ ...r, courses: (r.courses || []).map((c) => c.id === id ? { ...c, [field]: val } : c) }));
+  const removeCourse = (id) => setResume((r) => ({ ...r, courses: (r.courses || []).filter((c) => c.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><BookOpen className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Courses</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {courses.map((c) => (
+        <AccordionItem key={c.id} label={c.name || 'Course'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Course Name" value={c.name} onChange={(v) => updateCourse(c.id, 'name', v)} className="col-span-2" />
+            <FormField label="Institution" value={c.institution} onChange={(v) => updateCourse(c.id, 'institution', v)} />
+            <FormField label="Year" value={c.year} onChange={(v) => updateCourse(c.id, 'year', v)} />
+          </div>
+          <button type="button" onClick={() => removeCourse(c.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={addCourse} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Course
+      </button>
+    </div>
+  );
+}
+
+function ReferencesBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const refs = resume.references || [];
+  const addRef = () => setResume((r) => ({ ...r, references: [...(r.references || []), { id: Date.now(), name: '', company: '', contact: '' }] }));
+  const updateRef = (id, field, val) => setResume((r) => ({ ...r, references: (r.references || []).map((ref) => ref.id === id ? { ...ref, [field]: val } : ref) }));
+  const removeRef = (id) => setResume((r) => ({ ...r, references: (r.references || []).filter((ref) => ref.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Users className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">References</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {refs.map((ref) => (
+        <AccordionItem key={ref.id} label={ref.name || 'Reference'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Name" value={ref.name} onChange={(v) => updateRef(ref.id, 'name', v)} />
+            <FormField label="Company" value={ref.company} onChange={(v) => updateRef(ref.id, 'company', v)} />
+            <FormField label="Contact / Email" value={ref.contact} onChange={(v) => updateRef(ref.id, 'contact', v)} className="col-span-2" />
+          </div>
+          <button type="button" onClick={() => removeRef(ref.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={addRef} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Reference
+      </button>
+    </div>
+  );
+}
+
+function InternshipsBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const internships = resume.internships || [];
+  const add = () => setResume((r) => ({ ...r, internships: [...(r.internships || []), { id: Date.now(), title: '', company: '', startDate: '', endDate: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, internships: (r.internships || []).map((i) => i.id === id ? { ...i, [field]: val } : i) }));
+  const remove = (id) => setResume((r) => ({ ...r, internships: (r.internships || []).filter((i) => i.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Building2 className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Internships</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {internships.map((i) => (
+        <AccordionItem key={i.id} label={[i.title, i.company].filter(Boolean).join(' at ') || 'Internship'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Job Title" value={i.title} onChange={(v) => update(i.id, 'title', v)} />
+            <FormField label="Company" value={i.company} onChange={(v) => update(i.id, 'company', v)} />
+            <FormField label="Start Date" value={i.startDate} onChange={(v) => update(i.id, 'startDate', v)} placeholder="MM/YYYY" />
+            <FormField label="End Date" value={i.endDate} onChange={(v) => update(i.id, 'endDate', v)} placeholder="MM/YYYY" />
+          </div>
+          <button type="button" onClick={() => remove(i.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Internship
+      </button>
+    </div>
+  );
+}
+
+function PublicationsBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const pubs = resume.publications || [];
+  const add = () => setResume((r) => ({ ...r, publications: [...(r.publications || []), { id: Date.now(), title: '', publisher: '', year: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, publications: (r.publications || []).map((p) => p.id === id ? { ...p, [field]: val } : p) }));
+  const remove = (id) => setResume((r) => ({ ...r, publications: (r.publications || []).filter((p) => p.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Library className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Publications</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {pubs.map((p) => (
+        <AccordionItem key={p.id} label={p.title || 'Publication'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Title" value={p.title} onChange={(v) => update(p.id, 'title', v)} className="col-span-2" />
+            <FormField label="Publisher" value={p.publisher} onChange={(v) => update(p.id, 'publisher', v)} />
+            <FormField label="Year" value={p.year} onChange={(v) => update(p.id, 'year', v)} />
+          </div>
+          <button type="button" onClick={() => remove(p.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Publication
+      </button>
+    </div>
+  );
+}
+
+function CustomBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const custom = resume.customSection || { title: '', content: '' };
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Plus className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Custom Section</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      <div className="space-y-3">
+        <FormField label="Section Title" value={custom.title} onChange={(v) => setResume((r) => ({ ...r, customSection: { ...r.customSection, title: v } }))} placeholder="e.g. Volunteer Work" className="col-span-2" />
+        <FormField label="Content" value={custom.content} onChange={(v) => setResume((r) => ({ ...r, customSection: { ...r.customSection, content: v } }))} placeholder="Describe this section…" className="col-span-2" />
+      </div>
+    </div>
+  );
+}
+
+const BLOCK_COMPONENTS = {
+  hobbies: HobbiesBlock,
+  courses: CoursesBlock,
+  references: ReferencesBlock,
+  internships: InternshipsBlock,
+  publications: PublicationsBlock,
+  custom: CustomBlock,
+};
+
+const SECTION_COMPONENTS = {
+  personalInfo: PersonalInfoSection,
+  education: EducationSection,
+  skills: SkillsSection,
+  languages: LanguagesSection,
+  personalDetails: PersonalDetailsSection,
+  summary: SummarySection,
+  experience: ExperienceSection,
+};
+
+export default function FinishStep({ onNext, onBack }) {
+  const { resume, setTemplate, setAccentColor, setTitle } = useResume();
+  const p = resume.personalInfo;
+
+  const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
+  const [activeId, setActiveId] = useState(null);
+  const [enabledBlocks, setEnabledBlocks] = useState([]);
+
+  const displayTitle =
+    resume.title || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'My Resume';
+
+  // Use MouseSensor + TouchSensor instead of PointerSensor to avoid click interference
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  const handleDragStart = ({ active }) => setActiveId(active.id);
+  const handleDragEnd = ({ active, over }) => {
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+    setSectionOrder((prev) => arrayMove(prev, prev.indexOf(active.id), prev.indexOf(over.id)));
+  };
+
+  const toggleBlock = (key) => {
+    setEnabledBlocks((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const ActiveSectionComponent = activeId ? SECTION_COMPONENTS[activeId] : null;
+
+  return (
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-8">
+
+      {/* Cover letter banner */}
+      <div className="flex items-center gap-4 bg-white rounded-xl border border-gray-200 px-5 py-4">
+        <span className="text-sm text-gray-700 flex-1">✨ Create a job-specific cover letter based on this CV.</span>
+        <button type="button" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Create</button>
+        <button type="button" className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+      </div>
+
+      {/* Resume name */}
+      <div className="bg-white rounded-xl border border-gray-200 px-5 py-4 space-y-4">
+        <FormField label="Resume Title" value={displayTitle} onChange={(v) => setTitle(v)} />
+        <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+          <Plus className="w-4 h-4 text-blue-600 flex-shrink-0" />
+          <p className="text-xs text-gray-500 flex-1">Duplicate your CV and tailor it to a specific job title with AI-optimized keywords.</p>
+          <button type="button" className="text-xs font-semibold text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap">
+            Duplicate &amp; optimize for role
+          </button>
+        </div>
+      </div>
+
+      {/* Resume Formatting */}
+      <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+        <div className="flex items-center gap-2.5 mb-5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+            <Settings2 className="w-4 h-4 text-blue-600" />
+          </div>
+          <h2 className="text-base font-bold text-gray-800">Resume Formatting</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Template</label>
+            <select
+              value={resume.template}
+              onChange={(e) => setTemplate(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400"
+            >
+              {TEMPLATES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Accent Color</label>
+            <div className="flex gap-2 flex-wrap mt-1">
+              {ACCENT_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setAccentColor(c)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+                  style={{ backgroundColor: c, boxShadow: resume.accentColor === c ? `0 0 0 3px white, 0 0 0 5px ${c}` : undefined }}
+                  title={c}
+                >
+                  {resume.accentColor === c && <Check className="w-4 h-4 text-white drop-shadow" />}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Title Font</label>
+            <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400">
+              {FONTS.map((f) => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Body Font</label>
+            <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400">
+              {BODY_FONTS.map((f) => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Resume Language</label>
+            <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400">
+              <option>English</option>
+              <option>Hindi</option>
+              <option>French</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Drag-and-drop sections */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+          <div className="space-y-4">
+            {sectionOrder.map((sectionId) => {
+              const SectionComp = SECTION_COMPONENTS[sectionId];
+              return (
+                <SortableSection key={sectionId} id={sectionId}>
+                  {({ dragHandleProps }) => <SectionComp dragHandleProps={dragHandleProps} />}
+                </SortableSection>
+              );
+            })}
+          </div>
+        </SortableContext>
+        <DragOverlay>
+          {ActiveSectionComponent && (
+            <div className="opacity-90 shadow-2xl rotate-1">
+              <ActiveSectionComponent dragHandleProps={{}} />
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Active extra blocks */}
+      {enabledBlocks.length > 0 && (
+        <div className="space-y-4">
+          {enabledBlocks.map((key) => {
+            const BlockComp = BLOCK_COMPONENTS[key];
+            return BlockComp ? (
+              <BlockComp key={key} onRemove={() => toggleBlock(key)} />
+            ) : null;
+          })}
+        </div>
+      )}
+
+      {/* Add Blocks */}
+      <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+        <h2 className="font-bold text-gray-800 text-base mb-4">Add Blocks</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {BLOCKS.map(({ key, label, icon: Icon }) => {
+            const active = enabledBlocks.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => toggleBlock(key)}
+                className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all border ${
+                  active
+                    ? 'border-blue-400 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </div>
+                {active ? <Check className="w-4 h-4 text-blue-500" /> : <Plus className="w-4 h-4" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-between items-center pb-4">
+        <button type="button" onClick={onBack} className="text-gray-500 hover:text-gray-700 text-sm font-medium">
+          ← Back
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl font-semibold text-sm transition-colors"
+        >
+          Next to Download →
+        </button>
+      </div>
+    </div>
+  );
+}

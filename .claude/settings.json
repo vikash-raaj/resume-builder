@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open *)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(/usr/local/bin/sf data query *)",
+      "Bash(sf org list *)",
+      "Bash(/usr/local/bin/sf org open *)"
+    ]
+  }
+}
