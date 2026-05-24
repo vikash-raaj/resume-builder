@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { confirmPasswordReset } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { FileText, Loader2, CheckCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
+import Logo from "../components/Logo";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -52,12 +53,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="bg-blue-600 p-1.5 rounded-lg">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-gray-900">TheResume.io</span>
+        <div className="mb-8">
+          <Logo />
         </div>
 
         {done ? (

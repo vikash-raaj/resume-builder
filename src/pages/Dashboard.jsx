@@ -1,16 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
 import {
   collection, getDocs, deleteDoc, doc, setDoc,
   orderBy, query, serverTimestamp, writeBatch,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
-import Navbar from "../components/landing/Navbar";
+import AppLayout from "../components/AppLayout";
+import AuthPrompt from "../components/AuthPrompt";
+import RigaTemplate from "../components/builder/templates/RigaTemplate";
+import ModernTemplate from "../components/builder/templates/ModernTemplate";
+import ClassicTemplate from "../components/builder/templates/ClassicTemplate";
+import MinimalTemplate from "../components/builder/templates/MinimalTemplate";
 import {
   Plus, FileText, Trash2, Edit3, Clock, Loader2,
-  Copy, X, AlertCircle, Sparkles, CheckCircle,
+  Copy, X, AlertCircle, Sparkles, CheckCircle, Download,
 } from "lucide-react";
+
+const TEMPLATE_MAP = {
+  modern: ModernTemplate,
+  classic: ClassicTemplate,
+  minimal: MinimalTemplate,
+  riga: RigaTemplate,
+};
 
 const DRAFT_KEY = "resume_builder_draft";
 
@@ -122,9 +135,20 @@ export default function Dashboard() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [cleaning, setCleaning] = useState(false);
   const [toast, setToast] = useState(null);
+  const [printResume, setPrintResume] = useState(null);
+  const printRef = useRef(null);
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: printResume?.title || "Resume",
+    onAfterPrint: () => setPrintResume(null),
+  });
+  const triggerDownload = useCallback((res) => {
+    setPrintResume(res);
+    setTimeout(() => handlePrint(), 100);
+  }, [handlePrint]);
 
   useEffect(() => {
-    if (!user) { navigate("/"); return; }
+    if (!user) { setLoading(false); return; }
     loadResumes();
   }, [user]);
 
@@ -270,9 +294,11 @@ export default function Dashboard() {
     return Object.values(groups).reduce((sum, n) => sum + (n > 1 ? n - 1 : 0), 0);
   })();
 
+  if (!user) return <AuthPrompt title="My Resumes" />;
+
   return (
+    <AppLayout>
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       {/* Toast */}
       {toast && (
@@ -402,34 +428,42 @@ export default function Dashboard() {
                     Updated {formatDate(res.updatedAt)}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="space-y-1.5">
                     <button
-                      onClick={() => navigate(`/builder/${res.id}`)}
-                      className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:border-blue-300 hover:text-blue-600 transition-colors"
+                      onClick={() => triggerDownload(res)}
+                      className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
                     >
-                      <Edit3 className="w-4 h-4" />
-                      Edit
+                      <Download className="w-4 h-4" /> Download PDF
                     </button>
-                    <button
-                      onClick={() => handleDuplicate(res)}
-                      disabled={duplicating === res.id}
-                      title="Duplicate"
-                      className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors disabled:opacity-50"
-                    >
-                      {duplicating === res.id
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <Copy className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(res)}
-                      disabled={deleting === res.id}
-                      title="Delete"
-                      className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
-                    >
-                      {deleting === res.id
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <Trash2 className="w-4 h-4" />}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate(`/builder/${res.id}`)}
+                        className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:border-blue-300 hover:text-blue-600 transition-colors"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDuplicate(res)}
+                        disabled={duplicating === res.id}
+                        title="Duplicate"
+                        className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors disabled:opacity-50"
+                      >
+                        {duplicating === res.id
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Copy className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(res)}
+                        disabled={deleting === res.id}
+                        title="Delete"
+                        className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                      >
+                        {deleting === res.id
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Trash2 className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -437,6 +471,16 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <div className="hidden print:block">
+        <div ref={printRef}>
+          {printResume && (() => {
+            const ResumeTemplate = TEMPLATE_MAP[printResume.template] || RigaTemplate;
+            return <ResumeTemplate resume={printResume} />;
+          })()}
+        </div>
+      </div>
     </div>
+    </AppLayout>
   );
 }

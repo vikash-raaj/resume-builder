@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { X, FileText, Loader2, ArrowLeft, MailCheck } from "lucide-react";
+import { X, Loader2, ArrowLeft, MailCheck } from "lucide-react";
+import Logo from "./Logo";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -136,8 +137,8 @@ export default function AuthModal({ mode, onClose, onSwitch }) {
             </button>
 
             <div className="text-center mb-8">
-              <div className="inline-flex bg-blue-600 p-2 rounded-xl mb-3">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="flex justify-center mb-3">
+                <Logo size="sm" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Forgot password?</h2>
               <p className="text-gray-500 text-sm mt-1">
@@ -179,8 +180,8 @@ export default function AuthModal({ mode, onClose, onSwitch }) {
           /* ── LOGIN / SIGNUP ── */
           <>
             <div className="text-center mb-8">
-              <div className="inline-flex bg-blue-600 p-2 rounded-xl mb-3">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="flex justify-center mb-3">
+                <Logo size="sm" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {isLogin ? "Welcome back" : "Create your account"}

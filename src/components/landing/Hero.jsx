@@ -1,5 +1,37 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Star, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+
+const TYPING_WORDS = ["Gets You Hired", "Lands More Interviews", "Stands Out", "Gets You Promoted", "Beats The ATS"];
+
+function useTypewriter(words) {
+  const [display, setDisplay] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = words[wordIndex];
+    const speed = isDeleting ? 50 : 90;
+    const pauseAtEnd = !isDeleting && display === current ? 1600 : 0;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting && display === current) {
+        setIsDeleting(true);
+        return;
+      }
+      if (isDeleting && display === "") {
+        setIsDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
+        return;
+      }
+      setDisplay(isDeleting ? current.slice(0, display.length - 1) : current.slice(0, display.length + 1));
+    }, pauseAtEnd || speed);
+
+    return () => clearTimeout(timer);
+  }, [display, isDeleting, wordIndex, words]);
+
+  return display;
+}
 
 const RESUME_PREVIEW = {
   name: "Alex Johnson",
@@ -17,6 +49,7 @@ const RESUME_PREVIEW = {
 
 export default function Hero() {
   const navigate = useNavigate();
+  const typedWord = useTypewriter(TYPING_WORDS);
 
   return (
     <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-16 pb-24 overflow-hidden">
@@ -31,7 +64,11 @@ export default function Hero() {
 
             <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
               Build a Resume That
-              <span className="text-blue-600"> Gets You Hired</span>
+              <br />
+              <span className="text-blue-600 whitespace-nowrap">
+                {typedWord}
+                <span className="inline-block w-[3px] h-[1em] bg-blue-500 ml-1 align-middle animate-pulse" />
+              </span>
             </h1>
 
             <p className="text-xl text-gray-600 leading-relaxed">
