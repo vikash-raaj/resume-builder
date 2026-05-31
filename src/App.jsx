@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import {
   User, Briefcase, MessageCircle, TrendingUp,
 } from "lucide-react";
+import { trackPageView } from "./firebase/analytics";
 
 import RootPage from "./pages/RootPage";
 import Dashboard from "./pages/Dashboard";
@@ -15,6 +17,8 @@ import RecommendationLetterPage from "./pages/RecommendationLetterPage";
 import ComingSoonPage from "./pages/ComingSoonPage";
 
 export default function App() {
+  useEffect(() => { trackPageView(); }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

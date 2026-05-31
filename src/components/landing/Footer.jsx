@@ -1,7 +1,16 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FileText, X as XIcon, Link2, GitBranch } from "lucide-react";
+import { FileText, X as XIcon, Link2, GitBranch, Eye } from "lucide-react";
+import { subscribeToPageViews } from "../../firebase/analytics";
 
 export default function Footer() {
+  const [views, setViews] = useState(null);
+
+  useEffect(() => {
+    const unsub = subscribeToPageViews(setViews);
+    return unsub;
+  }, []);
+
   return (
     <footer className="bg-gray-900 text-gray-400 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,8 +58,18 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 text-sm text-center text-gray-500">
-          © {new Date().getFullYear()} TheResume.io. All rights reserved. Built with React + Firebase.
+        <div className="border-t border-gray-800 pt-8 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <Eye className="w-3.5 h-3.5" />
+            <span>
+              {views === null
+                ? "Loading visits..."
+                : `${views.toLocaleString()} total page visits`}
+            </span>
+          </div>
+          <p className="text-sm text-gray-500">
+            © {new Date().getFullYear()} TheResume.io. All rights reserved. Built with React + Firebase.
+          </p>
         </div>
       </div>
     </footer>

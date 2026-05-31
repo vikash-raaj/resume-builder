@@ -4,5 +4,12 @@ service cloud.firestore {
     match /users/{userId}/{collection}/{docId} {
       allow read, write, delete: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Public analytics — allow anyone to read and increment the counter
+    match /analytics/{docId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['count'])
+                   && request.resource.data.count is int;
+    }
   }
 }
