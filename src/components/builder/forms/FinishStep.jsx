@@ -24,16 +24,24 @@ import { useResume } from '../../../context/ResumeContext';
 import FormField from '../FormField';
 import RichTextEditor from '../RichTextEditor';
 import SkillLevelSlider from '../SkillLevelSlider';
+import { tailorResumeToJob, getStoredAIKey } from '../../../utils/aiService';
+import AIKeySetup from '../AIKeySetup';
+import { RESUME_LANGUAGES } from '../../../utils/resumeTranslations';
 
 const TEMPLATES = [
-  { label: 'Riga', value: 'riga' },
-  { label: 'Modern', value: 'modern' },
-  { label: 'Classic', value: 'classic' },
-  { label: 'Minimal', value: 'minimal' },
+  { label: 'Riga', value: 'riga', tag: 'Classic' },
+  { label: 'Modern', value: 'modern', tag: 'Popular' },
+  { label: 'Classic', value: 'classic', tag: 'Timeless' },
+  { label: 'Minimal', value: 'minimal', tag: 'Clean' },
+  { label: 'Executive', value: 'executive', tag: 'Leadership' },
+  { label: 'Tech', value: 'tech', tag: 'Developer' },
 ];
 const FONTS = ['Montserrat (default)', 'Inter', 'Roboto', 'Lato', 'Open Sans'];
 const BODY_FONTS = ['Crimson Text (default)', 'Georgia', 'Merriweather', 'Libre Baskerville'];
-const ACCENT_COLORS = ['#C8A84B', '#000000', '#2563EB', '#DC2626', '#059669', '#7C3AED'];
+const ACCENT_COLORS = [
+  '#C8A84B', '#1e3a6e', '#2563EB', '#DC2626', '#059669', '#7C3AED',
+  '#0f172a', '#b45309', '#0891b2', '#be185d', '#4f46e5', '#000000',
+];
 const LANG_LEVELS = ['Superior/Native', 'Highly Proficient', 'Very Good', 'Good Working', 'Working Knowledge'];
 const LEVELS = ['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'];
 
@@ -439,8 +447,92 @@ const SECTION_COMPONENTS = {
   experience: ExperienceSection,
 };
 
+function JDTailoringPanel({ resume }) {
+  const [jd, setJd] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showKeySetup, setShowKeySetup] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const stripHtml = (html = '') => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const analyze = async () => {
+    if (!getStoredAIKey()) { setShowKeySetup(true); return; }
+    if (!jd.trim()) { setError('Paste a job description first.'); return; }
+    setLoading(true); setError(''); setResult('');
+    const resumeText = [
+      resume.personalInfo?.jobTitle,
+      stripHtml(resume.summary),
+      resume.experience?.map(e => `${e.position} at ${e.company}: ${stripHtml(e.description)}`).join('\n'),
+      resume.skills?.map(s => (typeof s === 'string' ? s : s?.name)).filter(Boolean).join(', '),
+    ].filter(Boolean).join('\n');
+    try {
+      const text = await tailorResumeToJob({ resumeText, jobDescription: jd });
+      setResult(text);
+    } catch (e) {
+      if (e.message === 'NO_KEY') { setShowKeySetup(true); return; }
+      setError(e.message || 'Analysis failed.');
+    } finally { setLoading(false); }
+  };
+
+  const { Loader2, FileSearch, ChevronDown: CD, ChevronUp: CU, Sparkles } = {
+    Loader2: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
+    FileSearch: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+    ChevronDown: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 12 15 18 9"/></svg>,
+    ChevronUp: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="18 15 12 9 6 15"/></svg>,
+    Sparkles: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 17l.75 2.25L8 20l-2.25.75L5 23l-.75-2.25L2 20l2.25-.75L5 17z"/><path d="M19 3l.75 2.25L22 6l-2.25.75L19 9l-.75-2.25L16 6l2.25-.75L19 3z"/></svg>,
+  };
+
+  return (
+    <div className="border border-orange-200 rounded-xl overflow-hidden mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 hover:bg-orange-100 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🎯</span>
+          <div className="text-left">
+            <p className="text-sm font-bold text-orange-800">Job Description Tailoring</p>
+            <p className="text-xs text-orange-600">Paste a job posting and get AI-powered optimization tips</p>
+          </div>
+        </div>
+        {open ? <CU className="w-4 h-4 text-orange-500" /> : <CD className="w-4 h-4 text-orange-500" />}
+      </button>
+      {open && (
+        <div className="p-4 bg-white space-y-3">
+          <textarea
+            value={jd}
+            onChange={e => { setJd(e.target.value); setError(''); }}
+            rows={5}
+            placeholder="Paste the full job description here…"
+            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 resize-none"
+          />
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <button
+            type="button"
+            onClick={analyze}
+            disabled={loading}
+            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'Analyzing…' : 'Analyze & Optimize'}
+          </button>
+          {result && (
+            <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 mt-2">
+              <pre className="text-xs text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{result}</pre>
+            </div>
+          )}
+        </div>
+      )}
+      {showKeySetup && <AIKeySetup onClose={() => setShowKeySetup(false)} onSaved={() => { setShowKeySetup(false); analyze(); }} />}
+    </div>
+  );
+}
+
 export default function FinishStep({ onNext, onBack }) {
-  const { resume, setTemplate, setAccentColor, setTitle } = useResume();
+  const { resume, setTemplate, setAccentColor, setTitle, setLanguage } = useResume();
   const p = resume.personalInfo;
 
   const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
@@ -502,31 +594,54 @@ export default function FinishStep({ onNext, onBack }) {
           <h2 className="text-base font-bold text-gray-800">Resume Formatting</h2>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Template</label>
-            <select
-              value={resume.template}
-              onChange={(e) => setTemplate(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400"
-            >
-              {TEMPLATES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
+          <div className="col-span-2">
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-2">Template</label>
+            <div className="grid grid-cols-3 gap-2">
+              {TEMPLATES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setTemplate(t.value)}
+                  className={`relative flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 text-sm font-semibold transition-all ${
+                    resume.template === t.value
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {resume.template === t.value && (
+                    <Check className="w-3 h-3 absolute top-1.5 right-1.5 text-blue-500" />
+                  )}
+                  <span className="text-xs font-bold">{t.label}</span>
+                  <span className="text-[9px] opacity-60 mt-0.5">{t.tag}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Accent Color</label>
-            <div className="flex gap-2 flex-wrap mt-1">
+          <div className="col-span-2">
+            <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-2">Accent Color</label>
+            <div className="flex gap-2 flex-wrap items-center">
               {ACCENT_COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setAccentColor(c)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110 focus:outline-none"
                   style={{ backgroundColor: c, boxShadow: resume.accentColor === c ? `0 0 0 3px white, 0 0 0 5px ${c}` : undefined }}
                   title={c}
                 >
-                  {resume.accentColor === c && <Check className="w-4 h-4 text-white drop-shadow" />}
+                  {resume.accentColor === c && <Check className="w-3.5 h-3.5 text-white drop-shadow" />}
                 </button>
               ))}
+              {/* Custom color picker */}
+              <div className="relative w-7 h-7 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-blue-400 transition-colors" title="Custom color">
+                <input
+                  type="color"
+                  value={resume.accentColor || '#2563EB'}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+                <span className="text-[9px] text-gray-400 pointer-events-none">+</span>
+              </div>
             </div>
           </div>
           <div>
@@ -543,10 +658,14 @@ export default function FinishStep({ onNext, onBack }) {
           </div>
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-500 mb-1.5">Resume Language</label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400">
-              <option>English</option>
-              <option>Hindi</option>
-              <option>French</option>
+            <select
+              value={resume.language || 'en'}
+              onChange={e => setLanguage(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white outline-none focus:border-blue-400"
+            >
+              {RESUME_LANGUAGES.map(l => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -619,6 +738,9 @@ export default function FinishStep({ onNext, onBack }) {
           })}
         </div>
       </div>
+
+      {/* Job Description Tailoring */}
+      <JDTailoringPanel resume={resume} />
 
       {/* Navigation */}
       <div className="flex justify-between items-center pb-4">

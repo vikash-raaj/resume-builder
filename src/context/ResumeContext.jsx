@@ -29,6 +29,7 @@ const defaultResume = {
   template: "riga",
   accentColor: "",
   title: "",
+  language: "en",
 };
 
 function loadDraft() {
@@ -90,6 +91,7 @@ export function ResumeProvider({ children, initial }) {
   const setTemplate = (template) => setResume((r) => ({ ...r, template }));
   const setAccentColor = (accentColor) => setResume((r) => ({ ...r, accentColor }));
   const setTitle = (title) => setResume((r) => ({ ...r, title }));
+  const setLanguage = (language) => setResume((r) => ({ ...r, language }));
 
   return (
     <ResumeContext.Provider
@@ -108,6 +110,7 @@ export function ResumeProvider({ children, initial }) {
         setTemplate,
         setAccentColor,
         setTitle,
+        setLanguage,
       }}
     >
       {children}

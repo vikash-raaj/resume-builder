@@ -1,4 +1,5 @@
 import { MapPin, Phone, Mail } from 'lucide-react';
+import { getTranslations } from '../../../utils/resumeTranslations';
 
 const DEFAULT_ACCENT = '#1e3a6e';
 
@@ -49,6 +50,7 @@ export default function RigaTemplate({ resume }) {
   } = resume;
 
   const accent = resume.accentColor || DEFAULT_ACCENT;
+  const t = getTranslations(resume.language || 'en');
   const fullName = `${p.firstName || ''} ${p.lastName || ''}`.trim();
   const address = [p.address, p.city, p.country].filter(Boolean).join(', ');
 
@@ -123,7 +125,7 @@ export default function RigaTemplate({ resume }) {
           {/* Education */}
           {education.length > 0 && (
             <div>
-              <SectionTitle title="Education" accent={accent} />
+              <SectionTitle title={t.education} accent={accent} />
               <div className="space-y-3">
                 {education.map((edu, i) => (
                   <div key={i} className="flex gap-2">
@@ -145,7 +147,7 @@ export default function RigaTemplate({ resume }) {
           {/* Skills */}
           {skills.length > 0 && (
             <div>
-              <SectionTitle title="Skills" accent={accent} />
+              <SectionTitle title={t.skills} accent={accent} />
               <div className="space-y-0.5">
                 {skills.map((s, i) => (
                   <p key={i} className="text-gray-700" style={{ fontSize: '8.5px' }}>
@@ -180,7 +182,7 @@ export default function RigaTemplate({ resume }) {
           {/* Languages */}
           {languages.length > 0 && (
             <div>
-              <SectionTitle title="Languages" accent={accent} />
+              <SectionTitle title={t.languages} accent={accent} />
               <div className="space-y-2">
                 {languages.map((lang, i) => (
                   <div key={i}>
@@ -202,7 +204,7 @@ export default function RigaTemplate({ resume }) {
           {/* Certifications */}
           {certifications.length > 0 && (
             <div>
-              <SectionTitle title="Certifications" accent={accent} />
+              <SectionTitle title={t.certifications} accent={accent} />
               <div className="space-y-2">
                 {certifications.map((cert, i) => (
                   <div key={i} className="flex gap-2">
@@ -268,7 +270,7 @@ export default function RigaTemplate({ resume }) {
           {/* Work Experience */}
           {experience.length > 0 && (
             <div>
-              <SectionTitle title="Work Experience" accent={accent} />
+              <SectionTitle title={t.experience} accent={accent} />
               <div className="space-y-4">
                 {experience.map((job, i) => (
                   <div key={i} className="flex gap-2">

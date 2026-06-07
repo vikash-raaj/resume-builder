@@ -33,6 +33,7 @@ export default function FormField({
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
           readOnly={readOnly}
+          spellCheck={true}
           className="w-full outline-none text-gray-800 text-sm bg-transparent"
         />
       </div>

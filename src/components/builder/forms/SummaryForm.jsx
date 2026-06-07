@@ -1,5 +1,6 @@
 import { useResume } from '../../../context/ResumeContext';
 import RichTextEditor from '../RichTextEditor';
+import AIWritingPanel from '../AIWritingPanel';
 
 export default function SummaryForm({ onNext, onBack }) {
   const { resume, updateSummary } = useResume();
@@ -18,6 +19,18 @@ export default function SummaryForm({ onNext, onBack }) {
         onChange={updateSummary}
         label="SUMMARY"
         placeholder="Advocate enrolled with the Bar Council, practicing before the High Court since…"
+      />
+
+      <AIWritingPanel
+        type="summary"
+        context={{
+          firstName: resume.personalInfo?.firstName,
+          lastName: resume.personalInfo?.lastName,
+          jobTitle: resume.personalInfo?.jobTitle,
+          experience: resume.experience,
+          skills: resume.skills,
+        }}
+        onInsert={(text) => updateSummary(text)}
       />
 
       <div className="flex justify-between items-center mt-8">

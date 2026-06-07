@@ -3,6 +3,8 @@ import { Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useResume } from '../../../context/ResumeContext';
 import FormField from '../FormField';
 import RichTextEditor from '../RichTextEditor';
+import AIWritingPanel from '../AIWritingPanel';
+import BulletLibraryPanel from '../BulletLibraryPanel';
 
 const blank = () => ({
   id: Date.now() + Math.random(),
@@ -144,6 +146,21 @@ export default function ExperienceForm({ onNext, onBack }) {
                   value={job.description}
                   onChange={(v) => update(job.id, 'description', v)}
                   placeholder="• Represented clients in civil, criminal, and constitutional matters…"
+                />
+
+                <BulletLibraryPanel
+                  jobTitle={job.title}
+                  onInsert={(bullet) => {
+                    const current = job.description || '';
+                    const sep = current && !current.endsWith('\n') ? '\n' : '';
+                    update(job.id, 'description', current + sep + '• ' + bullet);
+                  }}
+                />
+
+                <AIWritingPanel
+                  type="bullets"
+                  context={{ jobTitle: job.title, company: job.company, description: job.description }}
+                  onInsert={(text) => update(job.id, 'description', text)}
                 />
 
                 <button

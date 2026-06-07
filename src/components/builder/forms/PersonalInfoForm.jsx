@@ -1,13 +1,95 @@
 import { useRef, useState } from 'react';
-import { Trash2, Pencil, Bookmark, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { Trash2, Pencil, Bookmark, ChevronDown, ChevronUp, MapPin, Link2, Upload, Check, AlertCircle } from 'lucide-react';
 import { useResume } from '../../../context/ResumeContext';
 import FormField from '../FormField';
 
 export default function PersonalInfoForm({ onNext }) {
-  const { resume, updatePersonalInfo } = useResume();
+  const { resume, updatePersonalInfo, updateExperience, updateEducation, updateSkills } = useResume();
   const p = resume.personalInfo;
   const fileRef = useRef(null);
+  const linkedinRef = useRef(null);
   const [showExtra, setShowExtra] = useState(false);
+  const [linkedinStatus, setLinkedinStatus] = useState('idle'); // idle | success | error
+
+  const parseLinkedInExport = (json) => {
+    try {
+      // LinkedIn JSON export has different structures depending on export type
+      const data = json;
+      const updates = {};
+
+      // Basic profile
+      if (data.firstName) updates.firstName = data.firstName;
+      if (data.lastName) updates.lastName = data.lastName;
+      if (data.headline) updates.jobTitle = data.headline;
+      if (data.emailAddress) updates.email = data.emailAddress;
+      if (data.phoneNumbers?.[0]?.number) updates.phone = data.phoneNumbers[0].number;
+      if (data.address) updates.address = data.address;
+      if (data.publicIdentifier) updates.linkedin = `linkedin.com/in/${data.publicIdentifier}`;
+      if (data.websites?.[0]?.url) updates.website = data.websites[0].url;
+      if (data.locationName) { const parts = data.locationName.split(','); updates.city = parts[0]?.trim(); updates.country = parts[1]?.trim() || ''; }
+
+      if (Object.keys(updates).length > 0) updatePersonalInfo(updates);
+
+      // Experience
+      if (data.positions?.values?.length) {
+        const exp = data.positions.values.map(pos => ({
+          id: Date.now() + Math.random(),
+          position: pos.title || '',
+          title: pos.title || '',
+          company: pos.company?.name || '',
+          startDate: pos.startDate ? `${pos.startDate.month || ''}/${pos.startDate.year || ''}` : '',
+          endDate: pos.endDate ? `${pos.endDate.month || ''}/${pos.endDate.year || ''}` : '',
+          current: !pos.endDate,
+          description: pos.summary || '',
+          city: pos.locationName || '',
+        }));
+        updateExperience(exp);
+      }
+
+      // Education
+      if (data.educations?.values?.length) {
+        const edu = data.educations.values.map(e => ({
+          id: Date.now() + Math.random(),
+          school: e.schoolName || '',
+          degree: e.degree || '',
+          field: e.fieldOfStudy || '',
+          startDate: e.startDate?.year?.toString() || '',
+          endDate: e.endDate?.year?.toString() || '',
+        }));
+        updateEducation(edu);
+      }
+
+      // Skills
+      if (data.skills?.values?.length) {
+        const skills = data.skills.values.map(s => ({ name: s.skill?.name || s.name || '', level: 'Experienced' }));
+        updateSkills(skills);
+      }
+
+      setLinkedinStatus('success');
+      setTimeout(() => setLinkedinStatus('idle'), 3000);
+    } catch (e) {
+      console.error('LinkedIn parse error', e);
+      setLinkedinStatus('error');
+      setTimeout(() => setLinkedinStatus('idle'), 3000);
+    }
+  };
+
+  const handleLinkedInFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target.result);
+        parseLinkedInExport(json);
+      } catch {
+        setLinkedinStatus('error');
+        setTimeout(() => setLinkedinStatus('idle'), 3000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   const set = (k, v) => updatePersonalInfo({ [k]: v });
 
@@ -29,6 +111,28 @@ export default function PersonalInfoForm({ onNext }) {
       <p className="text-gray-500 mb-8">
         Add your phone number and email so recruiters can reach you.
       </p>
+
+      {/* LinkedIn Import */}
+      <div className="flex items-center gap-3 mb-6 p-3.5 bg-blue-50 border border-blue-100 rounded-xl">
+        <Link2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-blue-800">Import from LinkedIn</p>
+          <p className="text-xs text-blue-600 opacity-80">Export your profile as JSON from LinkedIn settings → Data Privacy → Get a copy of your data</p>
+        </div>
+        <input ref={linkedinRef} type="file" accept=".json" className="hidden" onChange={handleLinkedInFile} />
+        <button
+          onClick={() => linkedinRef.current?.click()}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ${
+            linkedinStatus === 'success' ? 'bg-emerald-100 text-emerald-700' :
+            linkedinStatus === 'error' ? 'bg-red-100 text-red-600' :
+            'bg-white border border-blue-200 text-blue-700 hover:bg-blue-100'
+          }`}
+        >
+          {linkedinStatus === 'success' ? <><Check className="w-3 h-3" /> Imported!</> :
+           linkedinStatus === 'error' ? <><AlertCircle className="w-3 h-3" /> Invalid file</> :
+           <><Upload className="w-3 h-3" /> Import JSON</>}
+        </button>
+      </div>
 
       {/* Photo upload */}
       <div className="flex items-start gap-4 mb-7">

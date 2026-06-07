@@ -5,7 +5,9 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import AppLayout from "../components/AppLayout";
-import { Save, Loader2, ArrowLeft, CheckCircle, AlertCircle, Download } from "lucide-react";
+import { Save, Loader2, ArrowLeft, CheckCircle, AlertCircle, Download, Sparkles, Copy, Check, RefreshCw } from "lucide-react";
+import { generateCoverLetter, getStoredAIKey } from "../utils/aiService";
+import AIKeySetup from "../components/builder/AIKeySetup";
 
 const BLANK = {
   title: "",
@@ -98,6 +100,10 @@ export default function CoverLetterBuilder() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!!id);
   const [toast, setToast] = useState(null);
+  const [aiState, setAiState] = useState('idle'); // idle | loading | done | error
+  const [aiResult, setAiResult] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [showKeySetup, setShowKeySetup] = useState(false);
   const printRef = useRef(null);
 
   const handlePrint = useReactToPrint({
@@ -121,6 +127,39 @@ export default function CoverLetterBuilder() {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleGenerateAI = async () => {
+    if (!getStoredAIKey()) { setShowKeySetup(true); return; }
+    setAiState('loading');
+    setAiResult('');
+    try {
+      const text = await generateCoverLetter({
+        senderName: form.senderName,
+        senderJobTitle: form.senderJobTitle,
+        recipientName: form.recipientName,
+        recipientCompany: form.recipientCompany,
+        recipientJobTitle: form.recipientJobTitle,
+        subject: form.subject,
+      });
+      setAiResult(text);
+      setAiState('done');
+    } catch (e) {
+      if (e.message === 'NO_KEY') { setShowKeySetup(true); setAiState('idle'); }
+      else { setAiState('error'); }
+    }
+  };
+
+  const handleCopyAI = () => {
+    navigator.clipboard.writeText(aiResult).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleInsertAI = () => {
+    setForm(f => ({ ...f, content: aiResult }));
+    setAiState('idle');
+    setAiResult('');
+  };
 
   const save = async () => {
     if (!user) return;
@@ -148,6 +187,8 @@ export default function CoverLetterBuilder() {
       </div>
     </AppLayout>
   );
+
+  if (showKeySetup) return <AIKeySetup onClose={() => setShowKeySetup(false)} onSaved={() => { setShowKeySetup(false); handleGenerateAI(); }} />;
 
   return (
     <AppLayout>
@@ -239,11 +280,71 @@ export default function CoverLetterBuilder() {
               {/* Content */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">Letter Content</h3>
+
+                {/* AI Generator */}
+                <div className="mb-3 border border-purple-200 rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-purple-50">
+                    <Sparkles className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                    <span className="text-xs font-semibold text-purple-800 flex-1">AI Cover Letter Writer</span>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    {aiState === 'idle' || aiState === 'error' ? (
+                      <>
+                        <p className="text-[11px] text-gray-500 leading-relaxed">
+                          Fill in your details and recipient above, then let AI draft the body of your cover letter.
+                        </p>
+                        {aiState === 'error' && (
+                          <p className="text-[11px] text-red-500">Generation failed. Check your API key and try again.</p>
+                        )}
+                        <button
+                          onClick={handleGenerateAI}
+                          className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" /> Generate with AI
+                        </button>
+                      </>
+                    ) : aiState === 'loading' ? (
+                      <div className="flex items-center justify-center gap-2 py-3 text-purple-600">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-xs font-medium">Writing your cover letter…</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
+                          {aiResult}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleInsertAI}
+                            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                          >
+                            Insert into Letter
+                          </button>
+                          <button
+                            onClick={handleCopyAI}
+                            className="flex items-center gap-1 border border-gray-200 text-gray-600 hover:border-purple-300 hover:text-purple-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copied ? 'Copied' : 'Copy'}
+                          </button>
+                          <button
+                            onClick={handleGenerateAI}
+                            className="p-1.5 border border-gray-200 rounded-lg text-gray-400 hover:text-purple-600 hover:border-purple-200 transition-colors"
+                            title="Regenerate"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 <textarea
                   value={form.content}
                   onChange={set("content")}
                   placeholder="Write your cover letter body here…"
-                  rows={12}
+                  rows={10}
                   className="w-full border border-gray-200 rounded-xl px-3.5 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all resize-none leading-relaxed"
                 />
               </div>

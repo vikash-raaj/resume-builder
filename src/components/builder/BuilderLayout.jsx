@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useResume } from '../../context/ResumeContext';
 import { useAuth } from '../../context/AuthContext';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { Check, Save, ArrowLeft, CloudOff } from 'lucide-react';
+import { Check, Save, ArrowLeft, CloudOff, GitBranch, X } from 'lucide-react';
 
 import RigaTemplate from './templates/RigaTemplate';
 import StepProgressBar from './StepProgressBar';
@@ -19,6 +19,40 @@ import DownloadStep from './forms/DownloadStep';
 const STEP_COUNT = 7;
 const SAVE_TIMEOUT_MS = 10000; // treat Firebase as failed after 10s
 
+function SaveVersionModal({ onSave, onClose }) {
+  const [name, setName] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-gray-900">Save Version</h2>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-4 h-4 text-gray-500" /></button>
+        </div>
+        <p className="text-sm text-gray-500 mb-4">Give this version a name so you can find it later (e.g. "Google Application", "v2 - Shorter").</p>
+        <input
+          autoFocus
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && name.trim() && onSave(name.trim())}
+          placeholder="Version name…"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-400 mb-4"
+        />
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
+          <button
+            onClick={() => name.trim() && onSave(name.trim())}
+            disabled={!name.trim()}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            Save Version
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BuilderLayout({ resumeId }) {
   const { resume } = useResume();
   const { user } = useAuth();
@@ -28,6 +62,8 @@ export default function BuilderLayout({ resumeId }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [versionSaved, setVersionSaved] = useState(false);
 
   const currentResumeId = useRef(resumeId || null);
   const saveRef = useRef(null);
@@ -121,6 +157,28 @@ export default function BuilderLayout({ resumeId }) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  const handleSaveVersion = async (versionName) => {
+    setShowVersionModal(false);
+    if (!user) return;
+    const baseId = currentResumeId.current;
+    if (!baseId) {
+      await saveRef.current(true);
+    }
+    const id = currentResumeId.current;
+    if (!id) return;
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'resumes', id, 'versions'), {
+        ...resume,
+        versionName,
+        savedAt: serverTimestamp(),
+      });
+      setVersionSaved(true);
+      setTimeout(() => setVersionSaved(false), 2500);
+    } catch (e) {
+      console.error('Version save failed', e);
+    }
+  };
+
   const next = () => setStep((s) => Math.min(s + 1, STEP_COUNT - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
@@ -137,13 +195,20 @@ export default function BuilderLayout({ resumeId }) {
       case 3: return <SkillsForm onNext={next} onBack={back} />;
       case 4: return <SummaryForm onNext={next} onBack={back} />;
       case 5: return <FinishStep onNext={next} onBack={back} />;
-      case 6: return <DownloadStep onBack={back} />;
+      case 6: return <DownloadStep onBack={back} resumeId={currentResumeId.current} />;
       default: return null;
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#EEF2F8' }}>
+      {showVersionModal && (
+        <SaveVersionModal
+          onSave={handleSaveVersion}
+          onClose={() => setShowVersionModal(false)}
+        />
+      )}
+
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between flex-shrink-0 no-print z-20 sticky top-0">
         <div className="flex items-center gap-3">
@@ -159,24 +224,40 @@ export default function BuilderLayout({ resumeId }) {
           </div>
         </div>
 
-        <button
-          onClick={() => saveRef.current(false)}
-          disabled={saving}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            saveError
-              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+        <div className="flex items-center gap-2">
+          {user && (
+            <button
+              onClick={() => setShowVersionModal(true)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                versionSaved
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
+              }`}
+              title="Save a named version of this resume"
+            >
+              <GitBranch className="w-4 h-4" />
+              {versionSaved ? 'Version saved!' : 'Save Version'}
+            </button>
+          )}
+          <button
+            onClick={() => saveRef.current(false)}
+            disabled={saving}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              saveError
+                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                : saved
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600'
+            }`}
+          >
+            {saveError
+              ? <><CloudOff className="w-4 h-4" /> Saved locally</>
               : saved
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600'
-          }`}
-        >
-          {saveError
-            ? <><CloudOff className="w-4 h-4" /> Saved locally</>
-            : saved
-            ? <><Check className="w-4 h-4" /> Saved!</>
-            : <><Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}</>
-          }
-        </button>
+              ? <><Check className="w-4 h-4" /> Saved!</>
+              : <><Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}</>
+            }
+          </button>
+        </div>
       </div>
 
       {/* Progress bar */}

@@ -1,4 +1,5 @@
 const DEFAULT_ACCENT = "#2563eb";
+import { getTranslations } from '../../../utils/resumeTranslations';
 const LEVEL_COLORS = { beginner: "#94a3b8", intermediate: "#f59e0b", expert: "#10b981" };
 
 const skillName = (s) => (typeof s === "string" ? s : s.name);
@@ -8,6 +9,7 @@ export default function ModernTemplate({ resume }) {
   const { personalInfo: p, summary, experience, education, skills, certifications } = resume;
   const fullName = `${p.firstName} ${p.lastName}`.trim();
   const accent = resume.accentColor || DEFAULT_ACCENT;
+  const t = getTranslations(resume.language || 'en');
   const accentLight = accent + "18"; // ~10% opacity tint for borders/bg
 
   return (
@@ -37,7 +39,7 @@ export default function ModernTemplate({ resume }) {
               className="text-[11px] font-bold uppercase tracking-widest pb-1 mb-2 border-b"
               style={{ color: accent, borderColor: accentLight }}
             >
-              Professional Summary
+              {t.summary}
             </h2>
             <p className="text-gray-700 leading-relaxed">{summary}</p>
           </section>
@@ -50,7 +52,7 @@ export default function ModernTemplate({ resume }) {
               className="text-[11px] font-bold uppercase tracking-widest pb-1 mb-3 border-b"
               style={{ color: accent, borderColor: accentLight }}
             >
-              Work Experience
+              {t.experience}
             </h2>
             <div className="space-y-4">
               {experience.map((job, i) => (
@@ -65,7 +67,7 @@ export default function ModernTemplate({ resume }) {
                     </div>
                     <span className="text-gray-400 whitespace-nowrap ml-4">
                       {job.startDate}
-                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – Present" : ""}
+                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – " + t.present : ""}
                     </span>
                   </div>
                   {job.description && (
@@ -86,7 +88,7 @@ export default function ModernTemplate({ resume }) {
               className="text-[11px] font-bold uppercase tracking-widest pb-1 mb-3 border-b"
               style={{ color: accent, borderColor: accentLight }}
             >
-              Education
+              {t.education}
             </h2>
             <div className="space-y-3">
               {education.map((edu, i) => (
@@ -113,7 +115,7 @@ export default function ModernTemplate({ resume }) {
               className="text-[11px] font-bold uppercase tracking-widest pb-1 mb-3 border-b"
               style={{ color: accent, borderColor: accentLight }}
             >
-              Certifications
+              {t.certifications}
             </h2>
             <div className="space-y-2">
               {certifications.map((cert, i) => (
@@ -136,7 +138,7 @@ export default function ModernTemplate({ resume }) {
               className="text-[11px] font-bold uppercase tracking-widest pb-1 mb-2 border-b"
               style={{ color: accent, borderColor: accentLight }}
             >
-              Skills
+              {t.skills}
             </h2>
             <div className="flex flex-wrap gap-1.5">
               {skills.map((skill, i) => {

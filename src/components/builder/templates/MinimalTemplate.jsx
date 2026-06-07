@@ -1,4 +1,5 @@
 const DEFAULT_ACCENT = "#059669";
+import { getTranslations } from '../../../utils/resumeTranslations';
 const LEVEL_COLORS = { beginner: "#94a3b8", intermediate: "#f59e0b", expert: "#10b981" };
 
 const skillName = (s) => (typeof s === "string" ? s : s.name);
@@ -19,6 +20,7 @@ export default function MinimalTemplate({ resume }) {
   const { personalInfo: p, summary, experience, education, skills, certifications } = resume;
   const fullName = `${p.firstName} ${p.lastName}`.trim();
   const accent = resume.accentColor || DEFAULT_ACCENT;
+  const t = getTranslations(resume.language || 'en');
 
   return (
     <div className="bg-white w-full min-h-full font-sans text-[10px] leading-tight">
@@ -50,7 +52,7 @@ export default function MinimalTemplate({ resume }) {
 
         {(experience || []).length > 0 && (
           <section className="mb-5">
-            <SectionHeader accent={accent}>Experience</SectionHeader>
+            <SectionHeader accent={accent}>{t.experience}</SectionHeader>
             <div className="ml-9 space-y-3">
               {experience.map((job, i) => (
                 <div key={i}>
@@ -58,7 +60,7 @@ export default function MinimalTemplate({ resume }) {
                     <span className="font-semibold text-gray-900 text-[11px]">{job.title}</span>
                     <span className="text-gray-400">
                       {job.startDate}
-                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – Present" : ""}
+                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – " + t.present : ""}
                     </span>
                   </div>
                   <p className="font-medium" style={{ color: accent }}>
@@ -77,7 +79,7 @@ export default function MinimalTemplate({ resume }) {
 
         {(education || []).length > 0 && (
           <section className="mb-5">
-            <SectionHeader accent={accent}>Education</SectionHeader>
+            <SectionHeader accent={accent}>{t.education}</SectionHeader>
             <div className="ml-9 space-y-2">
               {education.map((edu, i) => (
                 <div key={i} className="flex justify-between">
@@ -97,7 +99,7 @@ export default function MinimalTemplate({ resume }) {
 
         {(certifications || []).length > 0 && (
           <section className="mb-5">
-            <SectionHeader accent={accent}>Certifications</SectionHeader>
+            <SectionHeader accent={accent}>{t.certifications}</SectionHeader>
             <div className="ml-9 space-y-2">
               {certifications.map((cert, i) => (
                 <div key={i} className="flex justify-between">
@@ -114,7 +116,7 @@ export default function MinimalTemplate({ resume }) {
 
         {(skills || []).length > 0 && (
           <section>
-            <SectionHeader accent={accent}>Skills</SectionHeader>
+            <SectionHeader accent={accent}>{t.skills}</SectionHeader>
             <div className="ml-9 flex flex-wrap gap-2">
               {skills.map((skill, i) => {
                 const name = skillName(skill);

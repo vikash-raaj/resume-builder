@@ -5,6 +5,18 @@ service cloud.firestore {
       allow read, write, delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Publicly shared resumes — anyone can read, only owner can write
+    match /publicResumes/{docId} {
+      allow read: if true;
+      allow write, delete: if request.auth != null;
+    }
+
+    // Resume view analytics — anyone can read/increment
+    match /resumeViews/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Public analytics — allow anyone to read and increment the counter
     match /analytics/{docId} {
       allow read: if true;

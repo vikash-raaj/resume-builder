@@ -1,4 +1,5 @@
 const DEFAULT_ACCENT = "#1f2937";
+import { getTranslations } from '../../../utils/resumeTranslations';
 const LEVEL_LABELS = { beginner: "Beginner", intermediate: "Intermediate", expert: "Expert" };
 
 const skillName = (s) => (typeof s === "string" ? s : s.name);
@@ -8,6 +9,7 @@ export default function ClassicTemplate({ resume }) {
   const { personalInfo: p, summary, experience, education, skills, certifications } = resume;
   const fullName = `${p.firstName} ${p.lastName}`.trim();
   const accent = resume.accentColor || DEFAULT_ACCENT;
+  const t = getTranslations(resume.language || 'en');
 
   return (
     <div className="bg-white w-full min-h-full font-serif text-[10px] leading-tight">
@@ -35,7 +37,7 @@ export default function ClassicTemplate({ resume }) {
               className="text-sm font-bold uppercase tracking-widest mb-1 pb-0.5"
               style={{ color: accent, borderBottom: `1px solid ${accent}40` }}
             >
-              Summary
+              {t.summary}
             </h2>
             <p className="text-gray-700 leading-relaxed mt-1.5">{summary}</p>
           </section>
@@ -47,7 +49,7 @@ export default function ClassicTemplate({ resume }) {
               className="text-sm font-bold uppercase tracking-widest mb-2 pb-0.5"
               style={{ color: accent, borderBottom: `1px solid ${accent}40` }}
             >
-              Experience
+              {t.experience}
             </h2>
             <div className="space-y-3 mt-1.5">
               {experience.map((job, i) => (
@@ -56,7 +58,7 @@ export default function ClassicTemplate({ resume }) {
                     <strong className="text-gray-900 text-[11px]">{job.title}</strong>
                     <span className="text-gray-500 text-[9px]">
                       {job.startDate}
-                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – Present" : ""}
+                      {job.endDate ? ` – ${job.endDate}` : job.current ? " – " + t.present : ""}
                     </span>
                   </div>
                   <p className="text-gray-600 italic">
@@ -80,7 +82,7 @@ export default function ClassicTemplate({ resume }) {
               className="text-sm font-bold uppercase tracking-widest mb-2 pb-0.5"
               style={{ color: accent, borderBottom: `1px solid ${accent}40` }}
             >
-              Education
+              {t.education}
             </h2>
             <div className="space-y-2 mt-1.5">
               {education.map((edu, i) => (
@@ -105,7 +107,7 @@ export default function ClassicTemplate({ resume }) {
               className="text-sm font-bold uppercase tracking-widest mb-2 pb-0.5"
               style={{ color: accent, borderBottom: `1px solid ${accent}40` }}
             >
-              Certifications
+              {t.certifications}
             </h2>
             <div className="space-y-1.5 mt-1.5">
               {certifications.map((cert, i) => (
@@ -127,7 +129,7 @@ export default function ClassicTemplate({ resume }) {
               className="text-sm font-bold uppercase tracking-widest mb-2 pb-0.5"
               style={{ color: accent, borderBottom: `1px solid ${accent}40` }}
             >
-              Skills
+              {t.skills}
             </h2>
             <p className="text-gray-700 mt-1">
               {skills.map((s) => {

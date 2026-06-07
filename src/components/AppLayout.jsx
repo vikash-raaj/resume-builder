@@ -1,25 +1,29 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  FileText, Mail, MailOpen, Send, User, Briefcase,
-  MessageCircle, TrendingUp, Globe, Phone,
+  FileText, Mail, MailOpen, Send, Briefcase,
+  MessageCircle, TrendingUp, Globe, Phone, Kanban, DollarSign, LayoutGrid, Zap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useSubscription } from "../context/SubscriptionContext";
 import Logo from "./Logo";
 
 const navItems = [
   { label: "CVs",                   icon: FileText,      path: "/dashboard" },
+  { label: "Job Tracker",           icon: Kanban,        path: "/job-tracker" },
   { label: "Cover Letter",          icon: Mail,          path: "/cover-letters" },
   { label: "Resignation Letter",    icon: MailOpen,      path: "/resignation-letters" },
   { label: "Recommendation Letter", icon: Send,          path: "/recommendation-letters" },
-  { label: "Photo Library",         icon: User,          path: "/photo-library" },
   { label: "Application Kit",       icon: Briefcase,     path: "/application-kit" },
-  { label: "Interview Practice",    icon: MessageCircle, path: "/interview-practice" },
-  { label: "Linkedin Optimization", icon: TrendingUp,    path: "/linkedin-optimization" },
+  { label: "Resume Examples",       icon: LayoutGrid,    path: "/resume-examples" },
+  { label: "Interview Prep",        icon: MessageCircle, path: "/interview-practice" },
+  { label: "LinkedIn Optimizer",    icon: TrendingUp,    path: "/linkedin-optimization" },
+  { label: "Salary Insights",       icon: DollarSign,    path: "/salary-insights" },
 ];
 
 export default function AppLayout({ children }) {
   const location = useLocation();
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const navigate = useNavigate();
 
   const initials = user?.displayName
@@ -78,6 +82,29 @@ export default function AppLayout({ children }) {
             Contact
           </button>
         </div>
+
+        {/* Upgrade prompt for free users */}
+        {user && !isPro && (
+          <div className="mx-3 mb-3">
+            <button
+              onClick={() => navigate('/#pricing')}
+              className="w-full flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-3 py-2.5 text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
+            >
+              <Zap className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Upgrade to Pro — $9/mo</span>
+            </button>
+          </div>
+        )}
+
+        {/* Pro badge */}
+        {user && isPro && (
+          <div className="mx-3 mb-3">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl px-3 py-2">
+              <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <span className="text-xs font-semibold text-amber-700">Pro Plan Active</span>
+            </div>
+          </div>
+        )}
 
         {/* User avatar */}
         <div className="border-t border-gray-100 px-5 py-3">

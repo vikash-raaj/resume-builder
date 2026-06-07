@@ -7,22 +7,28 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
+import { useSubscription } from "../context/SubscriptionContext";
 import AppLayout from "../components/AppLayout";
 import AuthPrompt from "../components/AuthPrompt";
 import RigaTemplate from "../components/builder/templates/RigaTemplate";
 import ModernTemplate from "../components/builder/templates/ModernTemplate";
 import ClassicTemplate from "../components/builder/templates/ClassicTemplate";
 import MinimalTemplate from "../components/builder/templates/MinimalTemplate";
+import ExecutiveTemplate from "../components/builder/templates/ExecutiveTemplate";
+import TechTemplate from "../components/builder/templates/TechTemplate";
 import {
   Plus, FileText, Trash2, Edit3, Clock, Loader2,
-  Copy, X, AlertCircle, Sparkles, CheckCircle, Download,
+  Copy, X, AlertCircle, Sparkles, CheckCircle, Download, Kanban, ChevronDown, Zap,
 } from "lucide-react";
+import { getCompletenessScore } from "../utils/completenessScore";
 
 const TEMPLATE_MAP = {
   modern: ModernTemplate,
   classic: ClassicTemplate,
   minimal: MinimalTemplate,
   riga: RigaTemplate,
+  executive: ExecutiveTemplate,
+  tech: TechTemplate,
 };
 
 const DRAFT_KEY = "resume_builder_draft";
@@ -126,6 +132,7 @@ function DeleteConfirmModal({ resume, onConfirm, onClose, deleting }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const navigate = useNavigate();
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -173,7 +180,11 @@ export default function Dashboard() {
     }
   };
 
+  const FREE_RESUME_LIMIT = 3;
+  const atFreeLimit = !isPro && resumes.length >= FREE_RESUME_LIMIT;
+
   const handleCreateNew = (title) => {
+    if (atFreeLimit) { navigate('/#pricing'); return; }
     try { localStorage.removeItem(DRAFT_KEY); } catch {}
     setShowNewModal(false);
     navigate("/builder", { state: { newTitle: title } });
@@ -276,8 +287,10 @@ export default function Dashboard() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const templateColor = (t) =>
-    t === "modern" ? "bg-blue-600" : t === "classic" ? "bg-gray-800" : "bg-emerald-600";
+  const templateColor = (t) => {
+    const map = { modern: "bg-blue-600", classic: "bg-gray-800", minimal: "bg-gray-500", riga: "bg-indigo-600", executive: "bg-slate-800", tech: "bg-cyan-700" };
+    return map[t] || "bg-blue-600";
+  };
 
   const existingTitles = resumes.map((r) => r.title || "");
 
@@ -338,13 +351,26 @@ export default function Dashboard() {
               Welcome back, {user?.displayName || user?.email}
             </p>
           </div>
-          <button
-            onClick={() => setShowNewModal(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md shadow-blue-100"
-          >
-            <Plus className="w-5 h-5" />
-            New Resume
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/job-tracker')}
+              className="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:border-blue-400 hover:text-blue-600 transition-colors text-sm"
+            >
+              <Kanban className="w-4 h-4" />
+              Job Tracker
+            </button>
+            <button
+              onClick={() => atFreeLimit ? navigate('/#pricing') : setShowNewModal(true)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-colors shadow-md text-sm ${
+                atFreeLimit
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-100'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
+              }`}
+            >
+              <Plus className="w-5 h-5" />
+              {atFreeLimit ? 'Upgrade to Add More' : 'New Resume'}
+            </button>
+          </div>
         </div>
 
         {/* Duplicate cleanup banner */}
@@ -362,6 +388,23 @@ export default function Dashboard() {
             >
               {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {cleaning ? "Cleaning…" : "Clean up"}
+            </button>
+          </div>
+        )}
+
+        {/* Free tier upgrade banner */}
+        {!loading && !isPro && resumes.length > 0 && (
+          <div className="flex items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-5 py-3.5 mb-6">
+            <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <p className="text-sm text-blue-800 flex-1">
+              <span className="font-semibold">Free plan: {resumes.length}/{FREE_RESUME_LIMIT} resumes used.</span>{" "}
+              Upgrade to Pro for unlimited resumes, all 6 templates, DOCX export and version history.
+            </p>
+            <button
+              onClick={() => navigate('/#pricing')}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0"
+            >
+              <Zap className="w-3.5 h-3.5" /> Upgrade — $9/mo
             </button>
           </div>
         )}
@@ -388,86 +431,133 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Create new card */}
             <button
-              onClick={() => setShowNewModal(true)}
-              className="group border-2 border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 hover:border-blue-400 hover:bg-blue-50 transition-all min-h-[200px]"
+              onClick={() => atFreeLimit ? navigate('/#pricing') : setShowNewModal(true)}
+              className={`group border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-all min-h-[200px] ${
+                atFreeLimit
+                  ? 'border-amber-300 hover:bg-amber-50'
+                  : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+              }`}
             >
-              <div className="bg-gray-100 group-hover:bg-blue-100 p-4 rounded-full transition-colors">
-                <Plus className="w-8 h-8 text-gray-400 group-hover:text-blue-600 transition-colors" />
+              <div className={`p-4 rounded-full transition-colors ${atFreeLimit ? 'bg-amber-100' : 'bg-gray-100 group-hover:bg-blue-100'}`}>
+                <Plus className={`w-8 h-8 transition-colors ${atFreeLimit ? 'text-amber-500' : 'text-gray-400 group-hover:text-blue-600'}`} />
               </div>
-              <span className="font-semibold text-gray-500 group-hover:text-blue-600 transition-colors">
-                Create New Resume
-              </span>
+              <div className="text-center">
+                <span className={`font-semibold block transition-colors ${atFreeLimit ? 'text-amber-600' : 'text-gray-500 group-hover:text-blue-600'}`}>
+                  {atFreeLimit ? 'Upgrade to Pro' : 'Create New Resume'}
+                </span>
+                {atFreeLimit && (
+                  <span className="text-xs text-amber-500 mt-1 block">Free plan: 3 resume limit</span>
+                )}
+              </div>
             </button>
 
             {/* Resume cards */}
-            {resumes.map((res) => (
-              <div
-                key={res.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all"
-              >
-                <div className={`h-2 ${templateColor(res.template)}`} />
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 mr-2">
-                      <h3 className="font-semibold text-gray-900 text-base leading-tight truncate">
-                        {res.title || "Untitled Resume"}
-                      </h3>
-                      <span className="text-xs text-gray-400 capitalize mt-0.5 block">
-                        {res.template || "riga"} template
-                      </span>
+            {resumes.map((res) => {
+              const { score, label, color, missing } = getCompletenessScore(res);
+              const barColor = color === 'emerald' ? 'bg-emerald-500' : color === 'yellow' ? 'bg-yellow-500' : 'bg-red-400';
+              const textColor = color === 'emerald' ? 'text-emerald-600' : color === 'yellow' ? 'text-yellow-600' : 'text-red-500';
+              return (
+                <div
+                  key={res.id}
+                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all flex flex-col"
+                >
+                  <div className={`h-2 ${templateColor(res.template)}`} />
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0 mr-2">
+                        <h3 className="font-semibold text-gray-900 text-base leading-tight truncate">
+                          {res.title || "Untitled Resume"}
+                        </h3>
+                        <span className="text-xs text-gray-400 capitalize mt-0.5 block">
+                          {res.template || "riga"} template
+                        </span>
+                      </div>
+                      <FileText className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
                     </div>
-                    <FileText className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
-                  </div>
 
-                  {res.personalInfo?.jobTitle && (
-                    <p className="text-sm text-gray-500 mb-3">{res.personalInfo.jobTitle}</p>
-                  )}
+                    {res.personalInfo?.jobTitle && (
+                      <p className="text-sm text-gray-500 mb-2 truncate">{res.personalInfo.jobTitle}</p>
+                    )}
 
-                  <div className="flex items-center gap-1 text-xs text-gray-400 mb-4">
-                    <Clock className="w-3.5 h-3.5" />
-                    Updated {formatDate(res.updatedAt)}
-                  </div>
+                    {/* Completeness score */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Completeness</span>
+                        <span className={`text-xs font-bold ${textColor}`}>{score}% · {label}</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-1.5 rounded-full transition-all duration-500 ${barColor}`}
+                          style={{ width: `${score}%` }}
+                        />
+                      </div>
+                      {missing.length > 0 && score < 100 && (
+                        <details className="mt-1.5 group">
+                          <summary className="text-[10px] text-gray-400 cursor-pointer hover:text-gray-600 list-none flex items-center gap-1">
+                            <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
+                            {missing.length} thing{missing.length > 1 ? 's' : ''} to improve
+                          </summary>
+                          <ul className="mt-1.5 space-y-0.5">
+                            {missing.slice(0, 4).map((m, i) => (
+                              <li key={i} className="text-[10px] text-gray-400 flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-gray-300 flex-shrink-0" />
+                                {m}
+                              </li>
+                            ))}
+                            {missing.length > 4 && (
+                              <li className="text-[10px] text-gray-300">+{missing.length - 4} more…</li>
+                            )}
+                          </ul>
+                        </details>
+                      )}
+                    </div>
 
-                  <div className="space-y-1.5">
-                    <button
-                      onClick={() => triggerDownload(res)}
-                      className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
-                    >
-                      <Download className="w-4 h-4" /> Download PDF
-                    </button>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-4">
+                      <Clock className="w-3.5 h-3.5" />
+                      Updated {formatDate(res.updatedAt)}
+                    </div>
+
+                    <div className="space-y-1.5 mt-auto">
                       <button
-                        onClick={() => navigate(`/builder/${res.id}`)}
-                        className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:border-blue-300 hover:text-blue-600 transition-colors"
+                        onClick={() => triggerDownload(res)}
+                        className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
                       >
-                        <Edit3 className="w-4 h-4" />
-                        Edit
+                        <Download className="w-4 h-4" /> Download PDF
                       </button>
-                      <button
-                        onClick={() => handleDuplicate(res)}
-                        disabled={duplicating === res.id}
-                        title="Duplicate"
-                        className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors disabled:opacity-50"
-                      >
-                        {duplicating === res.id
-                          ? <Loader2 className="w-4 h-4 animate-spin" />
-                          : <Copy className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(res)}
-                        disabled={deleting === res.id}
-                        title="Delete"
-                        className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
-                      >
-                        {deleting === res.id
-                          ? <Loader2 className="w-4 h-4 animate-spin" />
-                          : <Trash2 className="w-4 h-4" />}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/builder/${res.id}`)}
+                          className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium hover:border-blue-300 hover:text-blue-600 transition-colors"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDuplicate(res)}
+                          disabled={duplicating === res.id}
+                          title="Duplicate"
+                          className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors disabled:opacity-50"
+                        >
+                          {duplicating === res.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Copy className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(res)}
+                          disabled={deleting === res.id}
+                          title="Delete"
+                          className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
+                        >
+                          {deleting === res.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
