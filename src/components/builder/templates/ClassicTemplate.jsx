@@ -1,6 +1,7 @@
-const DEFAULT_ACCENT = "#1f2937";
 import { getTranslations } from '../../../utils/resumeTranslations';
-const LEVEL_LABELS = { beginner: "Beginner", intermediate: "Intermediate", expert: "Expert" };
+
+const DEFAULT_ACCENT = "#1f2937";
+const LEVEL_COLORS = { beginner: "#94a3b8", intermediate: "#f59e0b", expert: "#10b981" };
 
 const skillName = (s) => (typeof s === "string" ? s : s.name);
 const skillLevel = (s) => (typeof s === "string" ? "" : s.level || "");
@@ -27,6 +28,7 @@ export default function ClassicTemplate({ resume }) {
           {p.phone && <><span>|</span><span>{p.phone}</span></>}
           {p.location && <><span>|</span><span>{p.location}</span></>}
           {p.linkedin && <><span>|</span><span>{p.linkedin}</span></>}
+          {p.website && <><span>|</span><span>{p.website}</span></>}
         </div>
       </div>
 
@@ -39,7 +41,7 @@ export default function ClassicTemplate({ resume }) {
             >
               {t.summary}
             </h2>
-            <p className="text-gray-700 leading-relaxed mt-1.5">{summary}</p>
+            <div className="text-gray-700 leading-relaxed mt-1.5 text-[13px]" dangerouslySetInnerHTML={{ __html: summary }} />
           </section>
         )}
 
@@ -54,9 +56,9 @@ export default function ClassicTemplate({ resume }) {
             <div className="space-y-3 mt-1.5">
               {experience.map((job, i) => (
                 <div key={i}>
-                  <div className="flex justify-between">
-                    <strong className="text-gray-900 text-[11px]">{job.title}</strong>
-                    <span className="text-gray-500 text-[9px]">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-gray-900 text-[11px]">{job.title}</h3>
+                    <span className="text-gray-500 text-[9px] ml-4 whitespace-nowrap">
                       {job.startDate}
                       {job.endDate ? ` – ${job.endDate}` : job.current ? " – " + t.present : ""}
                     </span>
@@ -66,9 +68,8 @@ export default function ClassicTemplate({ resume }) {
                     {job.location ? `, ${job.location}` : ""}
                   </p>
                   {job.description && (
-                    <p className="text-gray-700 mt-0.5 leading-relaxed whitespace-pre-line">
-                      {job.description}
-                    </p>
+                    <div className="text-gray-700 mt-0.5 leading-relaxed text-[12px] [&_div]:mt-0.5"
+                      dangerouslySetInnerHTML={{ __html: job.description }} />
                   )}
                 </div>
               ))}
@@ -86,15 +87,16 @@ export default function ClassicTemplate({ resume }) {
             </h2>
             <div className="space-y-2 mt-1.5">
               {education.map((edu, i) => (
-                <div key={i} className="flex justify-between">
+                <div key={i} className="flex justify-between items-start">
                   <div>
                     <strong className="text-gray-900 text-[11px]">
                       {edu.degree}
-                      {edu.field ? `, ${edu.field}` : ""}
+                      {edu.field ? ` in ${edu.field}` : ""}
                     </strong>
                     <p className="text-gray-600 italic">{edu.school}</p>
+                    {edu.gpa && <p className="text-gray-400 text-[9px]">GPA: {edu.gpa}</p>}
                   </div>
-                  <span className="text-gray-500 text-[9px] ml-4">{edu.gradYear}</span>
+                  <span className="text-gray-500 text-[9px] ml-4 whitespace-nowrap">{edu.gradYear}</span>
                 </div>
               ))}
             </div>
@@ -111,12 +113,14 @@ export default function ClassicTemplate({ resume }) {
             </h2>
             <div className="space-y-1.5 mt-1.5">
               {certifications.map((cert, i) => (
-                <div key={i} className="flex justify-between">
+                <div key={i} className="flex justify-between items-start">
                   <div>
                     <strong className="text-gray-900 text-[11px]">{cert.name}</strong>
-                    {cert.issuer && <p className="text-gray-600 italic">{cert.issuer}</p>}
+                    {cert.issuer && (
+                      <p className="text-gray-500 text-[9px] italic">Issued by {cert.issuer}</p>
+                    )}
                   </div>
-                  {cert.year && <span className="text-gray-500 text-[9px] ml-4">{cert.year}</span>}
+                  {cert.year && <span className="text-gray-500 text-[9px] ml-4 whitespace-nowrap">{cert.year}</span>}
                 </div>
               ))}
             </div>
@@ -131,13 +135,27 @@ export default function ClassicTemplate({ resume }) {
             >
               {t.skills}
             </h2>
-            <p className="text-gray-700 mt-1">
-              {skills.map((s) => {
-                const name = skillName(s);
-                const level = skillLevel(s);
-                return level ? `${name} (${LEVEL_LABELS[level]})` : name;
-              }).join(" · ")}
-            </p>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {skills.map((skill, i) => {
+                const name = skillName(skill);
+                const level = skillLevel(skill);
+                return (
+                  <span
+                    key={i}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded font-medium text-[9px] border"
+                    style={{ borderColor: accent + "50", color: accent }}
+                  >
+                    {level && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: LEVEL_COLORS[level] }}
+                      />
+                    )}
+                    {name}
+                  </span>
+                );
+              })}
+            </div>
           </section>
         )}
       </div>

@@ -46,7 +46,7 @@ export default function MinimalTemplate({ resume }) {
         {summary && (
           <section className="mb-5">
             <SectionHeader accent={accent}>Profile</SectionHeader>
-            <p className="text-gray-600 leading-relaxed ml-9">{summary}</p>
+            <div className="text-gray-600 leading-relaxed ml-9 text-[13px]" dangerouslySetInnerHTML={{ __html: summary }} />
           </section>
         )}
 
@@ -67,9 +67,8 @@ export default function MinimalTemplate({ resume }) {
                     {job.company}
                   </p>
                   {job.description && (
-                    <p className="text-gray-600 mt-0.5 leading-relaxed whitespace-pre-line">
-                      {job.description}
-                    </p>
+                    <div className="text-gray-600 mt-0.5 leading-relaxed text-[12px] [&_div]:mt-0.5"
+                      dangerouslySetInnerHTML={{ __html: job.description }} />
                   )}
                 </div>
               ))}

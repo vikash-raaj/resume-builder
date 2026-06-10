@@ -41,7 +41,7 @@ export default function ModernTemplate({ resume }) {
             >
               {t.summary}
             </h2>
-            <p className="text-gray-700 leading-relaxed">{summary}</p>
+            <div className="text-gray-700 leading-relaxed text-[13px]" dangerouslySetInnerHTML={{ __html: summary }} />
           </section>
         )}
 
@@ -71,9 +71,8 @@ export default function ModernTemplate({ resume }) {
                     </span>
                   </div>
                   {job.description && (
-                    <p className="text-gray-600 mt-1 leading-relaxed whitespace-pre-line">
-                      {job.description}
-                    </p>
+                    <div className="text-gray-600 mt-1 leading-relaxed text-[12px] prose-sm [&_div]:mt-0.5"
+                      dangerouslySetInnerHTML={{ __html: job.description }} />
                   )}
                 </div>
               ))}
