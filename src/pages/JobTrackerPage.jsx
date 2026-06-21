@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Plus, Trash2, X, ArrowLeft, Briefcase, ChevronRight,
-  Calendar, Building2, ExternalLink, Loader2,
+  Plus, Trash2, X, ArrowLeft, Briefcase,
+  Calendar, Building2, Loader2, Kanban,
 } from 'lucide-react';
 import { collection, getDocs, setDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -256,6 +256,22 @@ export default function JobTrackerPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+          </div>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+            <div className="bg-blue-50 inline-flex p-4 rounded-2xl mb-4">
+              <Kanban className="w-10 h-10 text-blue-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No applications tracked yet</h2>
+            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              Add your first job application and track it through every stage — from wishlist to offer.
+            </p>
+            <button
+              onClick={openNew}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors mx-auto"
+            >
+              <Plus className="w-4 h-4" /> Add First Application
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-5 gap-4 overflow-x-auto">

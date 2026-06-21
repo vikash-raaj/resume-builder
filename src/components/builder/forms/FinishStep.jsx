@@ -18,7 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   User, GraduationCap, Star, Languages, FileText,
   Briefcase, ChevronDown, ChevronUp, Plus, X, Settings2, GripVertical,
-  Heart, BookOpen, Users, Building2, Library, Check,
+  Heart, BookOpen, Users, Building2, Library, Check, Code2, HandHeart, Award, ShieldCheck,
 } from 'lucide-react';
 import { useResume } from '../../../context/ResumeContext';
 import FormField from '../FormField';
@@ -50,6 +50,10 @@ const DEFAULT_SECTION_ORDER = [
 ];
 
 const BLOCKS = [
+  { key: 'projects', label: 'Projects', icon: Code2 },
+  { key: 'certifications', label: 'Certifications', icon: ShieldCheck },
+  { key: 'volunteer', label: 'Volunteer Work', icon: HandHeart },
+  { key: 'awards', label: 'Awards & Honors', icon: Award },
   { key: 'hobbies', label: 'Hobbies', icon: Heart },
   { key: 'courses', label: 'Courses', icon: BookOpen },
   { key: 'references', label: 'References', icon: Users },
@@ -428,7 +432,171 @@ function CustomBlock({ onRemove }) {
   );
 }
 
+function ProjectsBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const projects = resume.projects || [];
+  const add = () => setResume((r) => ({ ...r, projects: [...(r.projects || []), { id: Date.now(), name: '', description: '', url: '', year: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, projects: (r.projects || []).map((p) => p.id === id ? { ...p, [field]: val } : p) }));
+  const remove = (id) => setResume((r) => ({ ...r, projects: (r.projects || []).filter((p) => p.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Code2 className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Projects</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {projects.map((p) => (
+        <AccordionItem key={p.id} label={p.name || 'Project'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Project Name" value={p.name} onChange={(v) => update(p.id, 'name', v)} className="col-span-2" />
+            <FormField label="Year" value={p.year} onChange={(v) => update(p.id, 'year', v)} placeholder="2024" />
+            <FormField label="URL / Link" value={p.url} onChange={(v) => update(p.id, 'url', v)} placeholder="https://github.com/..." />
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+              <textarea
+                value={p.description}
+                onChange={(e) => update(p.id, 'description', e.target.value)}
+                rows={3}
+                placeholder="Describe what you built, the tech stack, and impact…"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"
+              />
+            </div>
+          </div>
+          <button type="button" onClick={() => remove(p.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Project
+      </button>
+    </div>
+  );
+}
+
+function CertificationsBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const certs = resume.certifications || [];
+  const add = () => setResume((r) => ({ ...r, certifications: [...(r.certifications || []), { id: Date.now(), name: '', issuer: '', year: '', url: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, certifications: (r.certifications || []).map((c) => c.id === id ? { ...c, [field]: val } : c) }));
+  const remove = (id) => setResume((r) => ({ ...r, certifications: (r.certifications || []).filter((c) => c.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><ShieldCheck className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Certifications</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {certs.map((c) => (
+        <AccordionItem key={c.id} label={c.name || 'Certification'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Certification Name" value={c.name} onChange={(v) => update(c.id, 'name', v)} className="col-span-2" />
+            <FormField label="Issuing Organization" value={c.issuer} onChange={(v) => update(c.id, 'issuer', v)} />
+            <FormField label="Year" value={c.year} onChange={(v) => update(c.id, 'year', v)} placeholder="2024" />
+            <FormField label="Credential URL" value={c.url} onChange={(v) => update(c.id, 'url', v)} placeholder="https://..." className="col-span-2" />
+          </div>
+          <button type="button" onClick={() => remove(c.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Certification
+      </button>
+    </div>
+  );
+}
+
+function VolunteerBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const vol = resume.volunteer || [];
+  const add = () => setResume((r) => ({ ...r, volunteer: [...(r.volunteer || []), { id: Date.now(), role: '', organization: '', startDate: '', endDate: '', description: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, volunteer: (r.volunteer || []).map((v) => v.id === id ? { ...v, [field]: val } : v) }));
+  const remove = (id) => setResume((r) => ({ ...r, volunteer: (r.volunteer || []).filter((v) => v.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><HandHeart className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Volunteer Work</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {vol.map((v) => (
+        <AccordionItem key={v.id} label={[v.role, v.organization].filter(Boolean).join(' at ') || 'Volunteer Role'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Role / Position" value={v.role} onChange={(val) => update(v.id, 'role', val)} />
+            <FormField label="Organization" value={v.organization} onChange={(val) => update(v.id, 'organization', val)} />
+            <FormField label="Start Date" value={v.startDate} onChange={(val) => update(v.id, 'startDate', val)} placeholder="Jan 2022" />
+            <FormField label="End Date" value={v.endDate} onChange={(val) => update(v.id, 'endDate', val)} placeholder="Dec 2022" />
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+              <textarea
+                value={v.description}
+                onChange={(e) => update(v.id, 'description', e.target.value)}
+                rows={2}
+                placeholder="What did you do and what was the impact?"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"
+              />
+            </div>
+          </div>
+          <button type="button" onClick={() => remove(v.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Volunteer Role
+      </button>
+    </div>
+  );
+}
+
+function AwardsBlock({ onRemove }) {
+  const { resume, setResume } = useResume();
+  const awards = resume.awards || [];
+  const add = () => setResume((r) => ({ ...r, awards: [...(r.awards || []), { id: Date.now(), title: '', issuer: '', year: '', description: '' }] }));
+  const update = (id, field, val) => setResume((r) => ({ ...r, awards: (r.awards || []).map((a) => a.id === id ? { ...a, [field]: val } : a) }));
+  const remove = (id) => setResume((r) => ({ ...r, awards: (r.awards || []).filter((a) => a.id !== id) }));
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 px-5 py-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center"><Award className="w-4 h-4 text-blue-600" /></div>
+          <h2 className="text-base font-bold text-gray-800">Awards &amp; Honors</h2>
+        </div>
+        <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+      </div>
+      {awards.map((a) => (
+        <AccordionItem key={a.id} label={a.title || 'Award'}>
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <FormField label="Award / Honor Title" value={a.title} onChange={(v) => update(a.id, 'title', v)} className="col-span-2" />
+            <FormField label="Issuing Body" value={a.issuer} onChange={(v) => update(a.id, 'issuer', v)} />
+            <FormField label="Year" value={a.year} onChange={(v) => update(a.id, 'year', v)} placeholder="2024" />
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Description (optional)</label>
+              <textarea
+                value={a.description}
+                onChange={(e) => update(a.id, 'description', e.target.value)}
+                rows={2}
+                placeholder="Brief description of this award…"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-none"
+              />
+            </div>
+          </div>
+          <button type="button" onClick={() => remove(a.id)} className="text-red-400 text-sm mt-2 hover:text-red-600">Remove</button>
+        </AccordionItem>
+      ))}
+      <button type="button" onClick={add} className="flex items-center gap-2 text-blue-600 text-sm font-medium hover:text-blue-700 mt-2">
+        <Plus className="w-4 h-4" /> Add Award
+      </button>
+    </div>
+  );
+}
+
 const BLOCK_COMPONENTS = {
+  projects: ProjectsBlock,
+  certifications: CertificationsBlock,
+  volunteer: VolunteerBlock,
+  awards: AwardsBlock,
   hobbies: HobbiesBlock,
   courses: CoursesBlock,
   references: ReferencesBlock,

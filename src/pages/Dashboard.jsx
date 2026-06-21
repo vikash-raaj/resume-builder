@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import {
@@ -17,7 +17,7 @@ import MinimalTemplate from "../components/builder/templates/MinimalTemplate";
 import ExecutiveTemplate from "../components/builder/templates/ExecutiveTemplate";
 import TechTemplate from "../components/builder/templates/TechTemplate";
 import {
-  Plus, FileText, Trash2, Edit3, Clock, Loader2,
+  Plus, FileText, Trash2, Edit3, Loader2,
   Copy, X, AlertCircle, Sparkles, CheckCircle, Download, Kanban, ChevronDown, Zap,
 } from "lucide-react";
 import { getCompletenessScore } from "../utils/completenessScore";
@@ -32,6 +32,41 @@ const TEMPLATE_MAP = {
 };
 
 const DRAFT_KEY = "resume_builder_draft";
+
+function ResumeThumbnail({ resume }) {
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setScale(el.offsetWidth / 794);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const ResumeTemplate = TEMPLATE_MAP[resume.template] || RigaTemplate;
+
+  return (
+    <div ref={containerRef} className="relative h-40 overflow-hidden bg-gray-100 border-b border-gray-200">
+      {scale > 0 && (
+        <div
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: '794px',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <ResumeTemplate resume={resume} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function NewResumeModal({ existingTitles, onConfirm, onClose }) {
   const [title, setTitle] = useState("");
@@ -130,6 +165,49 @@ function DeleteConfirmModal({ resume, onConfirm, onClose, deleting }) {
   );
 }
 
+function OnboardingModal({ onClose, onCreateResume }) {
+  const STEPS = [
+    { icon: FileText, title: 'Fill your details', desc: 'Add your work history, education, and skills in our guided step-by-step form.' },
+    { icon: Sparkles, title: 'Pick a template', desc: 'Choose from 6 professionally designed templates and customize colors and fonts.' },
+    { icon: Download, title: 'Download & share', desc: 'Export a pixel-perfect PDF or get a shareable public link in one click.' },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8">
+        <div className="text-center mb-7">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to TheResume.io 👋</h2>
+          <p className="text-gray-500 text-sm">Build a resume that gets you hired in 3 easy steps.</p>
+        </div>
+        <div className="space-y-4 mb-7">
+          {STEPS.map((s, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <s.icon className="w-4.5 h-4.5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">{i + 1}. {s.title}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onCreateResume}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-bold text-sm transition-colors shadow-lg shadow-blue-100"
+        >
+          Create My First Resume →
+        </button>
+        <button onClick={onClose} className="mt-3 w-full text-gray-400 text-xs hover:text-gray-600 transition-colors">
+          I'll look around first
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { isPro } = useSubscription();
@@ -139,6 +217,7 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [cleaning, setCleaning] = useState(false);
   const [toast, setToast] = useState(null);
@@ -171,7 +250,13 @@ export default function Dashboard() {
         orderBy("updatedAt", "desc")
       );
       const snap = await getDocs(q);
-      setResumes(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const loaded = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setResumes(loaded);
+      // Show onboarding if user has no resumes and joined in the last 10 minutes
+      if (loaded.length === 0 && user.metadata?.creationTime) {
+        const ageMs = Date.now() - new Date(user.metadata.creationTime).getTime();
+        if (ageMs < 10 * 60 * 1000) setShowOnboarding(true);
+      }
     } catch (e) {
       console.error("loadResumes failed:", e);
       showToast("Failed to load resumes. Check your connection.", "error");
@@ -287,10 +372,6 @@ export default function Dashboard() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const templateColor = (t) => {
-    const map = { modern: "bg-blue-600", classic: "bg-gray-800", minimal: "bg-gray-500", riga: "bg-indigo-600", executive: "bg-slate-800", tech: "bg-cyan-700" };
-    return map[t] || "bg-blue-600";
-  };
 
   const existingTitles = resumes.map((r) => r.title || "");
 
@@ -339,6 +420,13 @@ export default function Dashboard() {
           onConfirm={confirmDelete}
           onClose={() => setDeleteTarget(null)}
           deleting={!!deleting}
+        />
+      )}
+
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={() => setShowOnboarding(false)}
+          onCreateResume={() => { setShowOnboarding(false); setShowNewModal(true); }}
         />
       )}
 
@@ -461,7 +549,7 @@ export default function Dashboard() {
                   key={res.id}
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all flex flex-col"
                 >
-                  <div className={`h-2 ${templateColor(res.template)}`} />
+                  <ResumeThumbnail resume={res} />
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0 mr-2">
@@ -469,10 +557,10 @@ export default function Dashboard() {
                           {res.title || "Untitled Resume"}
                         </h3>
                         <span className="text-xs text-gray-400 capitalize mt-0.5 block">
-                          {res.template || "riga"} template
+                          {res.template || "riga"} template · {formatDate(res.updatedAt)}
                         </span>
                       </div>
-                      <FileText className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 capitalize">{res.template || "riga"}</span>
                     </div>
 
                     {res.personalInfo?.jobTitle && (
@@ -512,10 +600,6 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-4">
-                      <Clock className="w-3.5 h-3.5" />
-                      Updated {formatDate(res.updatedAt)}
-                    </div>
 
                     <div className="space-y-1.5 mt-auto">
                       <button
@@ -523,6 +607,12 @@ export default function Dashboard() {
                         className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-blue-100"
                       >
                         <Download className="w-4 h-4" /> Download PDF
+                      </button>
+                      <button
+                        onClick={() => navigate(`/builder/${res.id}`, { state: { openTailor: true } })}
+                        className="w-full flex items-center justify-center gap-1.5 border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 py-2 rounded-lg text-sm font-semibold transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4" /> Tailor to Job Description
                       </button>
                       <div className="flex gap-2">
                         <button

@@ -4,27 +4,57 @@ import { ArrowLeft, DollarSign, TrendingUp, Search } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
 
 const SALARY_DATA = {
+  // Engineering
   'Software Engineer': { us: { min: 95000, mid: 130000, max: 180000 }, uk: { min: 45000, mid: 65000, max: 95000 }, india: { min: 800000, mid: 1500000, max: 2800000 }, remote: { min: 80000, mid: 120000, max: 170000 } },
   'Senior Software Engineer': { us: { min: 140000, mid: 180000, max: 250000 }, uk: { min: 70000, mid: 95000, max: 140000 }, india: { min: 1800000, mid: 3000000, max: 5000000 }, remote: { min: 120000, mid: 160000, max: 220000 } },
+  'Staff / Principal Engineer': { us: { min: 200000, mid: 250000, max: 350000 }, uk: { min: 100000, mid: 135000, max: 190000 }, india: { min: 4000000, mid: 6500000, max: 10000000 }, remote: { min: 180000, mid: 230000, max: 320000 } },
+  'Engineering Manager': { us: { min: 170000, mid: 220000, max: 300000 }, uk: { min: 80000, mid: 110000, max: 160000 }, india: { min: 3000000, mid: 5000000, max: 8000000 }, remote: { min: 150000, mid: 200000, max: 275000 } },
   'Frontend Developer': { us: { min: 85000, mid: 115000, max: 160000 }, uk: { min: 40000, mid: 58000, max: 85000 }, india: { min: 600000, mid: 1200000, max: 2200000 }, remote: { min: 70000, mid: 105000, max: 150000 } },
   'Backend Developer': { us: { min: 90000, mid: 125000, max: 170000 }, uk: { min: 42000, mid: 62000, max: 92000 }, india: { min: 700000, mid: 1400000, max: 2600000 }, remote: { min: 75000, mid: 115000, max: 160000 } },
   'Full Stack Developer': { us: { min: 95000, mid: 128000, max: 175000 }, uk: { min: 44000, mid: 64000, max: 95000 }, india: { min: 750000, mid: 1500000, max: 2800000 }, remote: { min: 80000, mid: 118000, max: 165000 } },
+  'Mobile Developer (iOS/Android)': { us: { min: 95000, mid: 132000, max: 185000 }, uk: { min: 45000, mid: 65000, max: 98000 }, india: { min: 750000, mid: 1500000, max: 2800000 }, remote: { min: 80000, mid: 120000, max: 172000 } },
   'DevOps Engineer': { us: { min: 100000, mid: 140000, max: 195000 }, uk: { min: 50000, mid: 72000, max: 105000 }, india: { min: 900000, mid: 1800000, max: 3200000 }, remote: { min: 90000, mid: 130000, max: 185000 } },
+  'Site Reliability Engineer': { us: { min: 120000, mid: 158000, max: 215000 }, uk: { min: 58000, mid: 82000, max: 120000 }, india: { min: 1200000, mid: 2200000, max: 4000000 }, remote: { min: 105000, mid: 145000, max: 200000 } },
+  'Cloud Architect': { us: { min: 140000, mid: 185000, max: 260000 }, uk: { min: 68000, mid: 98000, max: 145000 }, india: { min: 1800000, mid: 3200000, max: 6000000 }, remote: { min: 125000, mid: 170000, max: 240000 } },
+  'Cybersecurity Engineer': { us: { min: 110000, mid: 150000, max: 210000 }, uk: { min: 52000, mid: 75000, max: 115000 }, india: { min: 1000000, mid: 2000000, max: 3800000 }, remote: { min: 98000, mid: 138000, max: 195000 } },
+  'QA / Test Engineer': { us: { min: 75000, mid: 100000, max: 145000 }, uk: { min: 35000, mid: 50000, max: 78000 }, india: { min: 550000, mid: 1100000, max: 2100000 }, remote: { min: 62000, mid: 90000, max: 132000 } },
+  // Data & AI
   'Data Scientist': { us: { min: 105000, mid: 145000, max: 200000 }, uk: { min: 48000, mid: 70000, max: 105000 }, india: { min: 1000000, mid: 2000000, max: 3800000 }, remote: { min: 95000, mid: 135000, max: 190000 } },
   'Data Analyst': { us: { min: 65000, mid: 90000, max: 130000 }, uk: { min: 30000, mid: 45000, max: 68000 }, india: { min: 500000, mid: 900000, max: 1800000 }, remote: { min: 55000, mid: 82000, max: 120000 } },
+  'Data Engineer': { us: { min: 110000, mid: 148000, max: 205000 }, uk: { min: 52000, mid: 75000, max: 112000 }, india: { min: 1100000, mid: 2200000, max: 4200000 }, remote: { min: 98000, mid: 138000, max: 190000 } },
   'Machine Learning Engineer': { us: { min: 130000, mid: 175000, max: 250000 }, uk: { min: 60000, mid: 88000, max: 130000 }, india: { min: 1500000, mid: 2800000, max: 5000000 }, remote: { min: 120000, mid: 160000, max: 230000 } },
+  'AI Research Scientist': { us: { min: 150000, mid: 210000, max: 320000 }, uk: { min: 72000, mid: 105000, max: 160000 }, india: { min: 2000000, mid: 4000000, max: 8000000 }, remote: { min: 140000, mid: 195000, max: 300000 } },
+  'Business Intelligence Analyst': { us: { min: 70000, mid: 95000, max: 138000 }, uk: { min: 32000, mid: 48000, max: 72000 }, india: { min: 550000, mid: 1000000, max: 2000000 }, remote: { min: 60000, mid: 86000, max: 125000 } },
+  // Product & Design
   'Product Manager': { us: { min: 110000, mid: 155000, max: 220000 }, uk: { min: 52000, mid: 78000, max: 120000 }, india: { min: 1200000, mid: 2500000, max: 4500000 }, remote: { min: 100000, mid: 145000, max: 210000 } },
+  'Senior Product Manager': { us: { min: 150000, mid: 195000, max: 270000 }, uk: { min: 72000, mid: 100000, max: 150000 }, india: { min: 2000000, mid: 3800000, max: 7000000 }, remote: { min: 135000, mid: 180000, max: 250000 } },
   'UX Designer': { us: { min: 80000, mid: 110000, max: 155000 }, uk: { min: 38000, mid: 55000, max: 82000 }, india: { min: 600000, mid: 1100000, max: 2000000 }, remote: { min: 65000, mid: 98000, max: 140000 } },
-  'Marketing Manager': { us: { min: 75000, mid: 105000, max: 155000 }, uk: { min: 35000, mid: 52000, max: 78000 }, india: { min: 700000, mid: 1400000, max: 2500000 }, remote: { min: 60000, mid: 92000, max: 135000 } },
-  'Sales Representative': { us: { min: 55000, mid: 80000, max: 140000 }, uk: { min: 28000, mid: 42000, max: 75000 }, india: { min: 400000, mid: 800000, max: 1500000 }, remote: { min: 45000, mid: 72000, max: 120000 } },
-  'Project Manager': { us: { min: 85000, mid: 115000, max: 165000 }, uk: { min: 40000, mid: 58000, max: 88000 }, india: { min: 800000, mid: 1600000, max: 3000000 }, remote: { min: 72000, mid: 105000, max: 155000 } },
-  'HR Manager': { us: { min: 70000, mid: 98000, max: 145000 }, uk: { min: 35000, mid: 50000, max: 78000 }, india: { min: 600000, mid: 1200000, max: 2200000 }, remote: { min: 58000, mid: 85000, max: 130000 } },
-  'Financial Analyst': { us: { min: 72000, mid: 98000, max: 145000 }, uk: { min: 35000, mid: 52000, max: 80000 }, india: { min: 600000, mid: 1200000, max: 2200000 }, remote: { min: 62000, mid: 88000, max: 132000 } },
-  'Customer Success Manager': { us: { min: 70000, mid: 95000, max: 140000 }, uk: { min: 33000, mid: 48000, max: 72000 }, india: { min: 600000, mid: 1100000, max: 2000000 }, remote: { min: 58000, mid: 85000, max: 125000 } },
+  'UX Researcher': { us: { min: 90000, mid: 120000, max: 165000 }, uk: { min: 42000, mid: 60000, max: 90000 }, india: { min: 700000, mid: 1300000, max: 2400000 }, remote: { min: 78000, mid: 110000, max: 152000 } },
+  'Product Designer': { us: { min: 95000, mid: 130000, max: 180000 }, uk: { min: 44000, mid: 62000, max: 95000 }, india: { min: 750000, mid: 1400000, max: 2600000 }, remote: { min: 80000, mid: 118000, max: 165000 } },
   'Graphic Designer': { us: { min: 55000, mid: 75000, max: 115000 }, uk: { min: 26000, mid: 38000, max: 58000 }, india: { min: 400000, mid: 700000, max: 1400000 }, remote: { min: 45000, mid: 68000, max: 105000 } },
+  // Business & Management
+  'Project Manager': { us: { min: 85000, mid: 115000, max: 165000 }, uk: { min: 40000, mid: 58000, max: 88000 }, india: { min: 800000, mid: 1600000, max: 3000000 }, remote: { min: 72000, mid: 105000, max: 155000 } },
+  'Scrum Master': { us: { min: 95000, mid: 120000, max: 162000 }, uk: { min: 44000, mid: 60000, max: 88000 }, india: { min: 900000, mid: 1700000, max: 3200000 }, remote: { min: 82000, mid: 110000, max: 150000 } },
+  'Operations Manager': { us: { min: 78000, mid: 105000, max: 152000 }, uk: { min: 36000, mid: 52000, max: 80000 }, india: { min: 700000, mid: 1400000, max: 2600000 }, remote: { min: 65000, mid: 95000, max: 140000 } },
+  'Marketing Manager': { us: { min: 75000, mid: 105000, max: 155000 }, uk: { min: 35000, mid: 52000, max: 78000 }, india: { min: 700000, mid: 1400000, max: 2500000 }, remote: { min: 60000, mid: 92000, max: 135000 } },
+  'Content Marketing Manager': { us: { min: 65000, mid: 88000, max: 130000 }, uk: { min: 30000, mid: 44000, max: 68000 }, india: { min: 550000, mid: 1000000, max: 1900000 }, remote: { min: 55000, mid: 80000, max: 120000 } },
+  'Growth Marketer': { us: { min: 80000, mid: 110000, max: 160000 }, uk: { min: 38000, mid: 55000, max: 84000 }, india: { min: 700000, mid: 1300000, max: 2500000 }, remote: { min: 68000, mid: 98000, max: 145000 } },
+  'Sales Representative': { us: { min: 55000, mid: 80000, max: 140000 }, uk: { min: 28000, mid: 42000, max: 75000 }, india: { min: 400000, mid: 800000, max: 1500000 }, remote: { min: 45000, mid: 72000, max: 120000 } },
+  'Account Executive': { us: { min: 70000, mid: 110000, max: 180000 }, uk: { min: 32000, mid: 55000, max: 95000 }, india: { min: 600000, mid: 1100000, max: 2200000 }, remote: { min: 58000, mid: 98000, max: 165000 } },
+  'Customer Success Manager': { us: { min: 70000, mid: 95000, max: 140000 }, uk: { min: 33000, mid: 48000, max: 72000 }, india: { min: 600000, mid: 1100000, max: 2000000 }, remote: { min: 58000, mid: 85000, max: 125000 } },
+  // Finance & Legal
+  'Financial Analyst': { us: { min: 72000, mid: 98000, max: 145000 }, uk: { min: 35000, mid: 52000, max: 80000 }, india: { min: 600000, mid: 1200000, max: 2200000 }, remote: { min: 62000, mid: 88000, max: 132000 } },
   'Accountant': { us: { min: 60000, mid: 80000, max: 120000 }, uk: { min: 30000, mid: 44000, max: 68000 }, india: { min: 400000, mid: 800000, max: 1600000 }, remote: { min: 50000, mid: 72000, max: 110000 } },
+  'Investment Banking Analyst': { us: { min: 100000, mid: 145000, max: 220000 }, uk: { min: 55000, mid: 85000, max: 135000 }, india: { min: 900000, mid: 1800000, max: 4000000 }, remote: { min: 85000, mid: 130000, max: 200000 } },
+  'Finance Manager': { us: { min: 95000, mid: 130000, max: 185000 }, uk: { min: 48000, mid: 68000, max: 105000 }, india: { min: 900000, mid: 1800000, max: 3500000 }, remote: { min: 82000, mid: 118000, max: 170000 } },
+  // People & HR
+  'HR Manager': { us: { min: 70000, mid: 98000, max: 145000 }, uk: { min: 35000, mid: 50000, max: 78000 }, india: { min: 600000, mid: 1200000, max: 2200000 }, remote: { min: 58000, mid: 85000, max: 130000 } },
+  'Recruiter / Talent Acquisition': { us: { min: 60000, mid: 82000, max: 125000 }, uk: { min: 28000, mid: 42000, max: 68000 }, india: { min: 500000, mid: 950000, max: 1900000 }, remote: { min: 52000, mid: 75000, max: 115000 } },
+  // Healthcare & Education
   'Nurse': { us: { min: 60000, mid: 80000, max: 115000 }, uk: { min: 28000, mid: 38000, max: 55000 }, india: { min: 300000, mid: 600000, max: 1200000 }, remote: { min: 55000, mid: 72000, max: 105000 } },
+  'Doctor / Physician': { us: { min: 200000, mid: 270000, max: 400000 }, uk: { min: 60000, mid: 95000, max: 150000 }, india: { min: 800000, mid: 1800000, max: 5000000 }, remote: { min: 0, mid: 0, max: 0 } },
   'Teacher': { us: { min: 42000, mid: 58000, max: 80000 }, uk: { min: 26000, mid: 38000, max: 55000 }, india: { min: 300000, mid: 550000, max: 1000000 }, remote: { min: 35000, mid: 52000, max: 78000 } },
+  'Instructional Designer': { us: { min: 62000, mid: 82000, max: 120000 }, uk: { min: 30000, mid: 44000, max: 68000 }, india: { min: 500000, mid: 950000, max: 1800000 }, remote: { min: 55000, mid: 75000, max: 112000 } },
 };
 
 const MARKETS = [
@@ -34,7 +64,19 @@ const MARKETS = [
   { id: 'remote', label: 'Remote (Global)', currency: '$', symbol: 'USD' },
 ];
 
+const CATEGORIES = [
+  { id: 'all', label: 'All' },
+  { id: 'eng', label: 'Engineering', roles: ['Software Engineer','Senior Software Engineer','Staff / Principal Engineer','Engineering Manager','Frontend Developer','Backend Developer','Full Stack Developer','Mobile Developer (iOS/Android)','DevOps Engineer','Site Reliability Engineer','Cloud Architect','Cybersecurity Engineer','QA / Test Engineer'] },
+  { id: 'data', label: 'Data & AI', roles: ['Data Scientist','Data Analyst','Data Engineer','Machine Learning Engineer','AI Research Scientist','Business Intelligence Analyst'] },
+  { id: 'product', label: 'Product & Design', roles: ['Product Manager','Senior Product Manager','UX Designer','UX Researcher','Product Designer','Graphic Designer'] },
+  { id: 'business', label: 'Business', roles: ['Project Manager','Scrum Master','Operations Manager','Marketing Manager','Content Marketing Manager','Growth Marketer','Sales Representative','Account Executive','Customer Success Manager'] },
+  { id: 'finance', label: 'Finance', roles: ['Financial Analyst','Accountant','Investment Banking Analyst','Finance Manager'] },
+  { id: 'people', label: 'People & HR', roles: ['HR Manager','Recruiter / Talent Acquisition'] },
+  { id: 'other', label: 'Healthcare & Education', roles: ['Nurse','Doctor / Physician','Teacher','Instructional Designer'] },
+];
+
 const fmt = (n, currency) => {
+  if (!n) return 'N/A';
   if (n >= 1000000) return `${currency}${(n / 100000).toFixed(0)}L`;
   if (n >= 100000) return `${currency}${(n / 1000).toFixed(0)}k`;
   return `${currency}${(n / 1000).toFixed(0)}k`;
@@ -45,13 +87,18 @@ export default function SalaryInsightsPage() {
   const [search, setSearch] = useState('');
   const [selectedRole, setSelectedRole] = useState('Software Engineer');
   const [selectedMarket, setSelectedMarket] = useState('us');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const market = MARKETS.find(m => m.id === selectedMarket);
   const data = SALARY_DATA[selectedRole]?.[selectedMarket];
 
-  const filteredRoles = search
-    ? Object.keys(SALARY_DATA).filter(r => r.toLowerCase().includes(search.toLowerCase()))
-    : Object.keys(SALARY_DATA);
+  const catRoles = selectedCategory === 'all'
+    ? Object.keys(SALARY_DATA)
+    : (CATEGORIES.find(c => c.id === selectedCategory)?.roles || []);
+
+  const filteredRoles = catRoles.filter(r =>
+    !search || r.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <AppLayout>
@@ -69,6 +116,19 @@ export default function SalaryInsightsPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left: role selector */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => { setSelectedCategory(cat.id); setSearch(''); }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors border ${
+                    selectedCategory === cat.id ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-600 border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input

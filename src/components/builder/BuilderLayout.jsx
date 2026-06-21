@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useResume } from '../../context/ResumeContext';
 import { useAuth } from '../../context/AuthContext';
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -57,8 +57,9 @@ export default function BuilderLayout({ resumeId }) {
   const { resume } = useResume();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(location.state?.openTailor ? 5 : 0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -195,7 +196,7 @@ export default function BuilderLayout({ resumeId }) {
       case 3: return <SkillsForm onNext={next} onBack={back} />;
       case 4: return <SummaryForm onNext={next} onBack={back} />;
       case 5: return <FinishStep onNext={next} onBack={back} />;
-      case 6: return <DownloadStep onBack={back} resumeId={currentResumeId.current} />;
+      case 6: return <DownloadStep onBack={back} resumeId={currentResumeId.current} onGoToStep={setStep} />;
       default: return null;
     }
   };

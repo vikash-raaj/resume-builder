@@ -75,6 +75,26 @@ export async function getSuggestionsByJobTitle(jobTitle) {
   );
 }
 
+export async function evaluateInterviewAnswer({ question, answer, category }) {
+  return callClaude(
+    `You are an expert interview coach. Evaluate this interview answer using the STAR method.
+
+Question: "${question}"
+Category: ${category}
+Answer: "${answer}"
+
+Give feedback in exactly this format:
+SCORE: [X/10]
+STRENGTHS: [1-2 specific things done well]
+IMPROVE: [1-2 specific, actionable improvements]
+STAR_CHECK: [Which STAR elements are present and which are missing]
+REWRITE_TIP: [One sentence showing how to open the answer more powerfully]
+
+Be direct and specific. Keep each section to 1-2 sentences.`,
+    'You are a senior interview coach who gives honest, actionable feedback.',
+  );
+}
+
 export async function generateCoverLetter({ senderName, senderJobTitle, recipientName, recipientCompany, recipientJobTitle, subject }) {
   return callClaude(
     `Write a professional cover letter body for:

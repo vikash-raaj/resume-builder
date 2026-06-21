@@ -24,7 +24,7 @@ const templateMap = {
   tech: TechTemplate,
 };
 
-export default function DownloadStep({ onBack, resumeId }) {
+export default function DownloadStep({ onBack, resumeId, onGoToStep }) {
   const { resume, setResume } = useResume();
   const { user } = useAuth();
   const printRef = useRef(null);
@@ -238,7 +238,11 @@ export default function DownloadStep({ onBack, resumeId }) {
 
       {/* ATS Score Modal */}
       {showATS && atsResult && (
-        <ATSModal result={atsResult} onClose={() => setShowATS(false)} />
+        <ATSModal
+          result={atsResult}
+          onClose={() => setShowATS(false)}
+          onGoToStep={(step) => { setShowATS(false); onGoToStep?.(step); }}
+        />
       )}
 
       {/* Versions Modal */}
@@ -313,7 +317,19 @@ function VersionsModal({ versions, loading, onRestore, onClose }) {
   );
 }
 
-function ATSModal({ result, onClose }) {
+const STEP_LABELS = ['Contact', 'Experience', 'Education', 'Skills', 'Summary', 'Finish It', 'Download'];
+
+function issueToStep(issue) {
+  const t = issue.toLowerCase();
+  if (t.includes('email') || t.includes('phone') || t.includes('location') || t.includes('full name') || t.includes('linkedin') || t.includes('professional title') || t.includes('job title')) return 0;
+  if (t.includes('summary')) return 4;
+  if (t.includes('experience') || t.includes('employment') || t.includes('action verb') || t.includes('bullet') || t.includes('metric') || t.includes('quantif') || t.includes('description')) return 1;
+  if (t.includes('skill')) return 3;
+  if (t.includes('education') || t.includes('degree')) return 2;
+  return null;
+}
+
+function ATSModal({ result, onClose, onGoToStep }) {
   const scoreColor =
     result.score >= 80 ? 'text-emerald-600' :
     result.score >= 60 ? 'text-yellow-600' : 'text-red-500';
@@ -353,12 +369,23 @@ function ATSModal({ result, onClose }) {
             <div className="mb-4">
               <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">Issues to Fix</h3>
               <div className="space-y-2">
-                {result.issues.map((issue, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-3 bg-red-50 rounded-lg">
-                    <span className="text-red-500 mt-0.5 text-xs font-bold">✗</span>
-                    <span className="text-sm text-red-700">{issue}</span>
-                  </div>
-                ))}
+                {result.issues.map((issue, i) => {
+                  const step = issueToStep(issue);
+                  return (
+                    <div key={i} className="flex items-start gap-2.5 p-3 bg-red-50 rounded-lg">
+                      <span className="text-red-500 mt-0.5 text-xs font-bold flex-shrink-0">✗</span>
+                      <span className="text-sm text-red-700 flex-1">{issue}</span>
+                      {step !== null && onGoToStep && (
+                        <button
+                          onClick={() => onGoToStep(step)}
+                          className="flex-shrink-0 text-xs font-semibold text-red-600 border border-red-200 bg-white hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          Fix in {STEP_LABELS[step]} →
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

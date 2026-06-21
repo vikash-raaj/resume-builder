@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, ChevronDown, ChevronUp, Star, Lightbulb, Check, ArrowLeft } from 'lucide-react';
+import { MessageCircle, ChevronDown, ChevronUp, Star, Lightbulb, Check, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import { evaluateInterviewAnswer, getStoredAIKey } from '../utils/aiService';
 
 const CATEGORIES = [
   {
@@ -81,10 +82,33 @@ const colorMap = {
   orange: { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
 };
 
-function QuestionCard({ q, hint, color }) {
+function QuestionCard({ q, hint, color, category }) {
   const [open, setOpen] = useState(false);
   const [practiced, setPracticed] = useState(false);
+  const [answer, setAnswer] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
   const c = colorMap[color];
+
+  const hasKey = !!getStoredAIKey();
+
+  const handleGetFeedback = async () => {
+    if (!answer.trim()) return;
+    setLoadingFeedback(true);
+    setFeedback('');
+    setFeedbackError('');
+    try {
+      const result = await evaluateInterviewAnswer({ question: q, answer, category });
+      setFeedback(result);
+    } catch (err) {
+      setFeedbackError(err.message === 'NO_KEY'
+        ? 'Add your Claude API key in the Resume Builder to use AI feedback.'
+        : 'Failed to get feedback. Please try again.');
+    } finally {
+      setLoadingFeedback(false);
+    }
+  };
 
   return (
     <div className={`border rounded-xl overflow-hidden transition-all ${practiced ? 'border-emerald-200 bg-emerald-50' : 'border-gray-200 bg-white'}`}>
@@ -108,18 +132,48 @@ function QuestionCard({ q, hint, color }) {
             <label className="block text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1.5">Your Practice Answer</label>
             <textarea
               rows={4}
+              value={answer}
+              onChange={e => setAnswer(e.target.value)}
               placeholder="Type your answer here to practice and review…"
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-blue-400 resize-none"
             />
           </div>
-          <button
-            onClick={() => setPracticed(p => !p)}
-            className={`mt-2 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              practiced ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
-            }`}
-          >
-            <Check className="w-3.5 h-3.5" /> {practiced ? 'Practiced ✓' : 'Mark as practiced'}
-          </button>
+
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <button
+              onClick={() => setPracticed(p => !p)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                practiced ? 'bg-emerald-100 text-emerald-700' : 'border border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+              }`}
+            >
+              <Check className="w-3.5 h-3.5" /> {practiced ? 'Practiced ✓' : 'Mark as practiced'}
+            </button>
+            {answer.trim().length > 20 && (
+              <button
+                onClick={handleGetFeedback}
+                disabled={loadingFeedback}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-60"
+              >
+                {loadingFeedback
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing…</>
+                  : <><Sparkles className="w-3.5 h-3.5" /> Get AI Feedback</>}
+              </button>
+            )}
+          </div>
+
+          {feedbackError && (
+            <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">{feedbackError}</div>
+          )}
+
+          {feedback && (
+            <div className="mt-3 p-4 rounded-xl bg-purple-50 border border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-bold text-purple-700 uppercase tracking-wide">AI Coach Feedback</span>
+              </div>
+              <pre className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">{feedback}</pre>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -193,7 +247,7 @@ export default function InterviewPrepPage() {
             </div>
             <div className="space-y-2">
               {category.questions.map((item, i) => (
-                <QuestionCard key={i} {...item} color={category.color} />
+                <QuestionCard key={i} {...item} color={category.color} category={category.label} />
               ))}
             </div>
           </div>

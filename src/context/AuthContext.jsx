@@ -12,7 +12,7 @@ import {
 import { auth, googleProvider } from "../firebase/config";
 
 const ACTION_CODE_SETTINGS = {
-  url: "https://theresumeio.com/reset-password",
+  url: `${window.location.origin}/reset-password`,
 };
 
 const AuthContext = createContext(null);
