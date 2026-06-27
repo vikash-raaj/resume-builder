@@ -52,26 +52,25 @@ export default function Hero() {
   const typedWord = useTypewriter(TYPING_WORDS);
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-16 pb-24 overflow-hidden">
+    <section className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-12 pb-16 sm:pt-16 sm:pb-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           {/* Left: Text */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
               <Star className="w-4 h-4 fill-current" />
               Trusted by 500,000+ job seekers
             </div>
 
-            <h1 className="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
               Build a Resume That
-              <br />
-              <span className="text-blue-600 whitespace-nowrap">
+              <span className="block text-blue-600 min-h-[1.2em]">
                 {typedWord}
                 <span className="inline-block w-[3px] h-[1em] bg-blue-500 ml-1 align-middle animate-pulse" />
               </span>
             </h1>
 
-            <p className="text-xl text-gray-600 leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 leading-relaxed">
               Create a stunning, ATS-optimized resume in minutes. Choose from professional templates, fill in your details, and download your resume instantly.
             </p>
 
@@ -83,22 +82,22 @@ export default function Hero() {
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 text-gray-700">
                   <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>{item}</span>
+                  <span className="text-sm sm:text-base">{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <button
                 onClick={() => navigate("/builder")}
-                className="flex items-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300"
+                className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300"
               >
                 Create My Resume
                 <ArrowRight className="w-5 h-5" />
               </button>
               <a
                 href="#templates"
-                className="flex items-center gap-2 border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg hover:border-blue-300 hover:text-blue-600 transition-all"
+                className="flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:border-blue-300 hover:text-blue-600 transition-all"
               >
                 View Templates
               </a>
@@ -108,14 +107,14 @@ export default function Hero() {
           </div>
 
           {/* Right: Resume card mock */}
-          <div className="relative flex justify-center lg:justify-end">
-            <div className="relative">
+          <div className="relative flex justify-center lg:justify-end mt-4 lg:mt-0">
+            <div className="relative w-full max-w-xs sm:max-w-sm">
               {/* Decorative blobs */}
               <div className="absolute -top-8 -right-8 w-64 h-64 bg-blue-200 rounded-full opacity-30 blur-3xl" />
               <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-indigo-200 rounded-full opacity-30 blur-3xl" />
 
               {/* Resume card */}
-              <div className="relative bg-white rounded-2xl resume-shadow w-80 p-6 border border-gray-100">
+              <div className="relative bg-white rounded-2xl resume-shadow w-full p-6 border border-gray-100">
                 {/* Header strip */}
                 <div className="bg-blue-600 -mx-6 -mt-6 px-6 pt-6 pb-5 rounded-t-2xl mb-4">
                   <h2 className="text-white text-xl font-bold">{RESUME_PREVIEW.name}</h2>
@@ -159,7 +158,7 @@ export default function Hero() {
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -bottom-4 -left-6 bg-green-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg">
+              <div className="absolute -bottom-4 left-0 sm:-left-6 bg-green-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg">
                 ✓ ATS Score: 98%
               </div>
             </div>

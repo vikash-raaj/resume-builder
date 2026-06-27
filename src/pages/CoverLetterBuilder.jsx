@@ -104,6 +104,7 @@ export default function CoverLetterBuilder() {
   const [aiResult, setAiResult] = useState('');
   const [copied, setCopied] = useState(false);
   const [showKeySetup, setShowKeySetup] = useState(false);
+  const [mobileTab, setMobileTab] = useState('form'); // 'form' | 'preview'
   const printRef = useRef(null);
 
   const handlePrint = useReactToPrint({
@@ -207,11 +208,11 @@ export default function CoverLetterBuilder() {
         )}
 
         {/* Top bar */}
-        <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="bg-white border-b border-gray-100 px-3 sm:px-6 py-3 flex items-center justify-between flex-shrink-0 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => navigate("/cover-letters")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 flex-shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -219,17 +220,28 @@ export default function CoverLetterBuilder() {
               value={form.title}
               onChange={set("title")}
               placeholder="Untitled Cover Letter"
-              className="text-base font-semibold text-gray-900 bg-transparent outline-none border-b-2 border-transparent focus:border-blue-400 px-1 py-0.5 transition-colors w-64"
+              className="text-sm sm:text-base font-semibold text-gray-900 bg-transparent outline-none border-b-2 border-transparent focus:border-blue-400 px-1 py-0.5 transition-colors min-w-0 w-full max-w-[160px] sm:max-w-xs"
             />
           </div>
-          <span className="text-xs text-gray-400">Changes saved automatically on Save</span>
+          {/* Mobile tab toggle */}
+          <div className="flex md:hidden items-center border border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+            <button
+              onClick={() => setMobileTab('form')}
+              className={`px-3 py-1.5 text-xs font-semibold transition-colors ${mobileTab === 'form' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+            >Edit</button>
+            <button
+              onClick={() => setMobileTab('preview')}
+              className={`px-3 py-1.5 text-xs font-semibold transition-colors ${mobileTab === 'preview' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+            >Preview</button>
+          </div>
+          <span className="hidden md:block text-xs text-gray-400 flex-shrink-0">Auto-saved on Save</span>
         </div>
 
         {/* Two-column body */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* Left: form panel */}
-          <div className="w-80 flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200 overflow-hidden">
+          {/* Left: form panel — full-width on mobile when tab=form, hidden when tab=preview */}
+          <div className={`${mobileTab === 'form' ? 'flex' : 'hidden'} md:flex w-full md:w-80 flex-shrink-0 flex-col bg-gray-50 border-r border-gray-200 overflow-hidden`}>
             <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
 
               {/* Your Details */}
@@ -371,7 +383,7 @@ export default function CoverLetterBuilder() {
           </div>
 
           {/* Right: letter preview (also used as print target) */}
-          <div className="flex-1 overflow-y-auto" ref={printRef}>
+          <div className={`${mobileTab === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 overflow-y-auto flex-col`} ref={printRef}>
             <PreviewPanel data={form} />
           </div>
         </div>

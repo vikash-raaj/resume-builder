@@ -432,47 +432,51 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Resumes</h1>
-            <p className="text-gray-500 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Resumes</h1>
+            <p className="text-gray-500 mt-1 text-sm sm:text-base truncate max-w-xs sm:max-w-none">
               Welcome back, {user?.displayName || user?.email}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => navigate('/job-tracker')}
-              className="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-3 rounded-xl font-semibold hover:border-blue-400 hover:text-blue-600 transition-colors text-sm"
+              className="flex items-center gap-2 border border-gray-300 text-gray-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl font-semibold hover:border-blue-400 hover:text-blue-600 transition-colors text-sm"
             >
               <Kanban className="w-4 h-4" />
-              Job Tracker
+              <span className="hidden xs:inline">Job Tracker</span>
+              <span className="xs:hidden">Tracker</span>
             </button>
             <button
               onClick={() => atFreeLimit ? navigate('/#pricing') : setShowNewModal(true)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-colors shadow-md text-sm ${
+              className={`flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold transition-colors shadow-md text-sm ${
                 atFreeLimit
                   ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-100'
                   : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100'
               }`}
             >
               <Plus className="w-5 h-5" />
-              {atFreeLimit ? 'Upgrade to Add More' : 'New Resume'}
+              <span className="hidden sm:inline">{atFreeLimit ? 'Upgrade to Add More' : 'New Resume'}</span>
+              <span className="sm:hidden">{atFreeLimit ? 'Upgrade' : 'New'}</span>
             </button>
           </div>
         </div>
 
         {/* Duplicate cleanup banner */}
         {!loading && duplicateCount > 0 && (
-          <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-xl px-5 py-3.5 mb-6">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-            <p className="text-sm text-amber-800 flex-1">
-              <span className="font-semibold">{duplicateCount} duplicate resume{duplicateCount > 1 ? "s" : ""} found.</span>{" "}
-              Keep only the newest version of each?
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-3.5 mb-6">
+            <div className="flex items-center gap-3 flex-1">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+              <p className="text-sm text-amber-800">
+                <span className="font-semibold">{duplicateCount} duplicate resume{duplicateCount > 1 ? "s" : ""} found.</span>{" "}
+                Keep only the newest version of each?
+              </p>
+            </div>
             <button
               onClick={cleanupDuplicates}
               disabled={cleaning}
-              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0 self-start sm:self-auto"
             >
               {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {cleaning ? "Cleaning…" : "Clean up"}
@@ -482,15 +486,17 @@ export default function Dashboard() {
 
         {/* Free tier upgrade banner */}
         {!loading && !isPro && resumes.length > 0 && (
-          <div className="flex items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-5 py-3.5 mb-6">
-            <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            <p className="text-sm text-blue-800 flex-1">
-              <span className="font-semibold">Free plan: {resumes.length}/{FREE_RESUME_LIMIT} resumes used.</span>{" "}
-              Upgrade to Pro for unlimited resumes, all 6 templates, DOCX export and version history.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl px-5 py-3.5 mb-6">
+            <div className="flex items-center gap-3 flex-1">
+              <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Free plan: {resumes.length}/{FREE_RESUME_LIMIT} resumes used.</span>{" "}
+                Upgrade to Pro for unlimited resumes, all 6 templates, DOCX export and version history.
+              </p>
+            </div>
             <button
               onClick={() => navigate('/#pricing')}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0 self-start sm:self-auto"
             >
               <Zap className="w-3.5 h-3.5" /> Upgrade — $9/mo
             </button>

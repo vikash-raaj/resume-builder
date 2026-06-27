@@ -259,8 +259,12 @@ export default function Navbar() {
             </button>
             {mobileProductsOpen && (
               <div className="pl-2 space-y-1">
-                {products.map(({ label, icon: Icon }) => (
-                  <button key={label} className="flex items-center gap-3 w-full py-2 text-left">
+                {products.map(({ label, icon: Icon, path }) => (
+                  <button
+                    key={label}
+                    className="flex items-center gap-3 w-full py-2 text-left"
+                    onClick={() => { if (path) { setMobileOpen(false); navigate(path); } }}
+                  >
                     <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100">
                       <Icon className="w-3.5 h-3.5 text-gray-500" />
                     </span>

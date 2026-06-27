@@ -20,6 +20,7 @@ import SalaryInsightsPage from "./pages/SalaryInsightsPage";
 import ApplicationKitPage from "./pages/ApplicationKitPage";
 import ResumeExamplesPage from "./pages/ResumeExamplesPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
   useEffect(() => { trackPageView(); }, []);
@@ -67,6 +68,9 @@ export default function App() {
 
             {/* Legacy redirect */}
             <Route path="/photo-library" element={<Dashboard />} />
+
+            {/* 404 catch-all */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </SubscriptionProvider>
       </AuthProvider>

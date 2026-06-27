@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -9,6 +9,32 @@ import ClassicTemplate from '../components/builder/templates/ClassicTemplate';
 import MinimalTemplate from '../components/builder/templates/MinimalTemplate';
 import ExecutiveTemplate from '../components/builder/templates/ExecutiveTemplate';
 import TechTemplate from '../components/builder/templates/TechTemplate';
+
+function ScaledResume({ children }) {
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.getBoundingClientRect().width;
+      setScale(Math.min(1, w / 794));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="w-full overflow-hidden" style={{ height: scale < 1 ? `${794 * 1.414 * scale}px` : undefined }}>
+      <div style={{ width: '794px', transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const TEMPLATE_MAP = {
   riga: RigaTemplate,
@@ -103,10 +129,12 @@ export default function SharedResumePage() {
         </div>
       </div>
 
-      {/* Resume */}
-      <div className="py-10 px-4 flex justify-center">
-        <div className="bg-white shadow-2xl rounded-xl overflow-hidden" style={{ width: '794px' }}>
-          <ResumeTemplate resume={resume} />
+      {/* Resume — scales down on mobile to fit viewport width */}
+      <div className="py-6 sm:py-10 px-2 sm:px-4 flex justify-center">
+        <div className="bg-white shadow-2xl rounded-xl overflow-hidden w-full max-w-[794px]">
+          <ScaledResume>
+            <ResumeTemplate resume={resume} />
+          </ScaledResume>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Trash2, X, ArrowLeft, Briefcase,
-  Calendar, Building2, Loader2, Kanban,
+  Calendar, Building2, Loader2, Kanban, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { collection, getDocs, setDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -127,6 +127,44 @@ function JobModal({ job, onClose, onSave }) {
   );
 }
 
+function MobileColumn({ col, jobs, onMove, onDelete, onEdit, onNew }) {
+  const [open, setOpen] = useState(jobs.length > 0);
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`w-full flex items-center gap-2 px-4 py-3 ${col.color}`}
+      >
+        <div className={`w-2 h-2 rounded-full ${col.dot}`} />
+        <span className={`text-sm font-bold flex-1 text-left ${col.textColor}`}>{col.label}</span>
+        <span className={`text-xs font-semibold ${col.textColor} opacity-70`}>{jobs.length}</span>
+        {open
+          ? <ChevronUp className={`w-4 h-4 ${col.textColor}`} />
+          : <ChevronDown className={`w-4 h-4 ${col.textColor}`} />}
+      </button>
+      {open && (
+        <div className="p-3 space-y-2">
+          {jobs.map(job => (
+            <JobCard
+              key={job.id}
+              job={job}
+              onMove={onMove}
+              onDelete={onDelete}
+              onClick={onEdit}
+            />
+          ))}
+          <button
+            onClick={onNew}
+            className="w-full flex items-center gap-1.5 text-gray-400 hover:text-gray-600 text-xs py-2 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-colors justify-center"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add application
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function JobTrackerPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -183,60 +221,33 @@ export default function JobTrackerPage() {
   const openEdit = (job) => { setEditJob(job); setShowModal(true); };
   const openNew = () => { setEditJob(blank()); setShowModal(true); };
 
-  if (!user) return (
-    <AppLayout>
-      <div className="max-w-[1400px] mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Job Tracker</h1>
-              <p className="text-sm text-gray-500">Track every application in one place</p>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-5 gap-4 opacity-40 pointer-events-none">
-          {COLUMNS.map(col => (
-            <div key={col.key} className="min-w-[200px]">
-              <div className={`flex items-center gap-2 px-2 py-2 rounded-xl mb-3 ${col.color}`}>
-                <div className={`w-2 h-2 rounded-full ${col.dot}`} />
-                <span className={`text-xs font-bold ${col.textColor}`}>{col.label}</span>
-              </div>
-              <div className="min-h-[100px] border-2 border-dashed border-gray-200 rounded-xl" />
-            </div>
-          ))}
-        </div>
-        <AuthPrompt />
-      </div>
-    </AppLayout>
-  );
+  if (!user) return <AuthPrompt title="Job Tracker" />;
 
   return (
     <AppLayout>
-      <div className="max-w-[1400px] mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+      <div className="max-w-[1400px] mx-auto px-4 py-6 sm:py-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Job Tracker</h1>
-              <p className="text-sm text-gray-500">Track every application in one place</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Job Tracker</h1>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">Track every application in one place</p>
             </div>
           </div>
           <button
             onClick={openNew}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
-            Add Application
+            <span className="hidden sm:inline">Add Application</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
 
         {/* Stats bar */}
-        <div className="flex gap-3 mb-6 flex-wrap">
+        <div className="flex gap-2 sm:gap-3 mb-6 flex-wrap">
           {COLUMNS.map(col => {
             const count = jobs.filter(j => j.status === col.key).length;
             return (
@@ -274,37 +285,60 @@ export default function JobTrackerPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-5 gap-4 overflow-x-auto">
-            {COLUMNS.map(col => {
-              const colJobs = jobs.filter(j => j.status === col.key);
-              return (
-                <div key={col.key} className="min-w-[200px]">
-                  <div className={`flex items-center gap-2 px-2 py-2 rounded-xl mb-3 ${col.color}`}>
-                    <div className={`w-2 h-2 rounded-full ${col.dot}`} />
-                    <span className={`text-xs font-bold ${col.textColor}`}>{col.label}</span>
-                    <span className={`text-[10px] ${col.textColor} opacity-60 ml-auto`}>{colJobs.length}</span>
-                  </div>
-                  <div className="space-y-2 min-h-[100px]">
-                    {colJobs.map(job => (
-                      <JobCard
-                        key={job.id}
-                        job={job}
-                        onMove={moveJob}
-                        onDelete={deleteJob}
-                        onClick={openEdit}
-                      />
-                    ))}
-                    <button
-                      onClick={openNew}
-                      className="w-full flex items-center gap-1.5 text-gray-300 hover:text-gray-500 text-xs py-2 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-colors justify-center"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <>
+            {/* Mobile/Tablet: stacked accordion columns */}
+            <div className="lg:hidden space-y-3">
+              {COLUMNS.map(col => {
+                const colJobs = jobs.filter(j => j.status === col.key);
+                return (
+                  <MobileColumn
+                    key={col.key}
+                    col={col}
+                    jobs={colJobs}
+                    onMove={moveJob}
+                    onDelete={deleteJob}
+                    onEdit={openEdit}
+                    onNew={openNew}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Desktop: horizontal kanban */}
+            <div className="hidden lg:block overflow-x-auto pb-4">
+              <div className="flex gap-4 min-w-max">
+                {COLUMNS.map(col => {
+                  const colJobs = jobs.filter(j => j.status === col.key);
+                  return (
+                    <div key={col.key} className="w-52 flex-shrink-0">
+                      <div className={`flex items-center gap-2 px-2 py-2 rounded-xl mb-3 ${col.color}`}>
+                        <div className={`w-2 h-2 rounded-full ${col.dot}`} />
+                        <span className={`text-xs font-bold ${col.textColor}`}>{col.label}</span>
+                        <span className={`text-[10px] ${col.textColor} opacity-60 ml-auto`}>{colJobs.length}</span>
+                      </div>
+                      <div className="space-y-2 min-h-[100px]">
+                        {colJobs.map(job => (
+                          <JobCard
+                            key={job.id}
+                            job={job}
+                            onMove={moveJob}
+                            onDelete={deleteJob}
+                            onClick={openEdit}
+                          />
+                        ))}
+                        <button
+                          onClick={openNew}
+                          className="w-full flex items-center gap-1.5 text-gray-300 hover:text-gray-500 text-xs py-2 rounded-lg border border-dashed border-gray-200 hover:border-gray-300 transition-colors justify-center"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Add
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
       </div>
 

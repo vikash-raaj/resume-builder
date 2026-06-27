@@ -1,18 +1,19 @@
 const STEPS = ['CONTACT', 'EXPERIENCE', 'EDUCATION', 'SKILLS', 'ABOUT', 'FINISH IT', 'DOWNLOAD'];
+const STEPS_SHORT = ['INFO', 'EXP', 'EDU', 'SKILLS', 'BIO', 'FINISH', 'GET'];
 
 export default function StepProgressBar({ current, onStepClick }) {
   const pct = current === 0 ? 0 : (current / (STEPS.length - 1)) * 100;
 
   return (
     <div className="bg-white border-b border-gray-200 no-print">
-      <div className="max-w-5xl mx-auto px-6 pt-3 pb-4">
-        {/* Labels */}
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 pt-3 pb-4">
+        {/* Labels — full on sm+, short on mobile */}
         <div className="flex justify-between mb-2">
           {STEPS.map((step, i) => (
             <button
               key={step}
               onClick={() => onStepClick?.(i)}
-              className={`flex-1 text-center text-[10px] font-bold tracking-widest transition-colors ${
+              className={`flex-1 text-center font-bold tracking-widest transition-colors ${
                 i === current
                   ? 'text-blue-600'
                   : i < current
@@ -20,7 +21,8 @@ export default function StepProgressBar({ current, onStepClick }) {
                   : 'text-gray-400'
               }`}
             >
-              {step}
+              <span className="hidden sm:inline text-[10px]">{step}</span>
+              <span className="sm:hidden text-[8px]">{STEPS_SHORT[i]}</span>
             </button>
           ))}
         </div>

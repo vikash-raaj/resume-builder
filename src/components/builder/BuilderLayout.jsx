@@ -211,25 +211,25 @@ export default function BuilderLayout({ resumeId }) {
       )}
 
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between flex-shrink-0 no-print z-20 sticky top-0">
-        <div className="flex items-center gap-3">
+      <div className="bg-white border-b border-gray-200 px-3 sm:px-5 py-3 flex items-center justify-between flex-shrink-0 no-print z-20 sticky top-0 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => navigate('/')}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <div>
-            <p className="font-semibold text-gray-900 text-sm max-w-[200px] truncate">{displayTitle}</p>
-            <p className="text-xs text-gray-400 capitalize">{resume.template} template</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-sm max-w-[120px] sm:max-w-[200px] truncate">{displayTitle}</p>
+            <p className="text-xs text-gray-400 capitalize hidden sm:block">{resume.template} template</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {user && (
             <button
               onClick={() => setShowVersionModal(true)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 versionSaved
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600'
@@ -237,13 +237,13 @@ export default function BuilderLayout({ resumeId }) {
               title="Save a named version of this resume"
             >
               <GitBranch className="w-4 h-4" />
-              {versionSaved ? 'Version saved!' : 'Save Version'}
+              <span className="hidden sm:inline">{versionSaved ? 'Version saved!' : 'Save Version'}</span>
             </button>
           )}
           <button
             onClick={() => saveRef.current(false)}
             disabled={saving}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               saveError
                 ? 'bg-amber-50 text-amber-700 border border-amber-200'
                 : saved
@@ -252,10 +252,10 @@ export default function BuilderLayout({ resumeId }) {
             }`}
           >
             {saveError
-              ? <><CloudOff className="w-4 h-4" /> Saved locally</>
+              ? <><CloudOff className="w-4 h-4" /><span className="hidden sm:inline ml-1">Saved locally</span></>
               : saved
-              ? <><Check className="w-4 h-4" /> Saved!</>
-              : <><Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}</>
+              ? <><Check className="w-4 h-4" /><span className="hidden sm:inline ml-1">Saved!</span></>
+              : <><Save className="w-4 h-4" /><span className="hidden sm:inline ml-1">{saving ? 'Saving…' : 'Save'}</span></>
             }
           </button>
         </div>

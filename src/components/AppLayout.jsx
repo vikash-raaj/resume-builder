@@ -116,7 +116,9 @@ export default function AppLayout({ children }) {
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
             {initials}
           </div>
-          <span className="text-sm text-gray-700 font-medium truncate">{firstName}</span>
+          <span className="text-sm text-gray-700 font-medium truncate">
+            {user ? firstName : "Guest"}
+          </span>
         </div>
       </div>
     </>
