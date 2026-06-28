@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://theresumeio.com/sitemap.xml
