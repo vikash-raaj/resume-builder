@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { useSubscription } from "../context/SubscriptionContext";
 import AppLayout from "../components/AppLayout";
 import AuthPrompt from "../components/AuthPrompt";
+import AdBanner from "../components/AdBanner";
 import RigaTemplate from "../components/builder/templates/RigaTemplate";
 import ModernTemplate from "../components/builder/templates/ModernTemplate";
 import ClassicTemplate from "../components/builder/templates/ClassicTemplate";
@@ -656,6 +657,8 @@ export default function Dashboard() {
             })}
           </div>
         )}
+
+        <AdBanner className="mt-10" />
       </div>
 
       <div className="hidden print:block">
