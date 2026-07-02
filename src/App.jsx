@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SubscriptionProvider } from "./context/SubscriptionContext";
 import { trackPageView } from "./firebase/analytics";
 
+import BuyMeCoffee from "./components/BuyMeCoffee";
 import RootPage from "./pages/RootPage";
 import Dashboard from "./pages/Dashboard";
 import BuilderPage from "./pages/BuilderPage";
@@ -29,6 +30,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <SubscriptionProvider>
+          <BuyMeCoffee />
           <Routes>
             {/* Public */}
             <Route path="/" element={<RootPage />} />
