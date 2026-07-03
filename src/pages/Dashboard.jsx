@@ -11,6 +11,7 @@ import { useSubscription } from "../context/SubscriptionContext";
 import AppLayout from "../components/AppLayout";
 import AuthPrompt from "../components/AuthPrompt";
 import AdBanner from "../components/AdBanner";
+import ImportResumeModal from "../components/ImportResumeModal";
 import RigaTemplate from "../components/builder/templates/RigaTemplate";
 import ModernTemplate from "../components/builder/templates/ModernTemplate";
 import ClassicTemplate from "../components/builder/templates/ClassicTemplate";
@@ -19,7 +20,7 @@ import ExecutiveTemplate from "../components/builder/templates/ExecutiveTemplate
 import TechTemplate from "../components/builder/templates/TechTemplate";
 import {
   Plus, FileText, Trash2, Edit3, Loader2,
-  Copy, X, AlertCircle, Sparkles, CheckCircle, Download, Kanban, ChevronDown, Zap,
+  Copy, X, AlertCircle, Sparkles, CheckCircle, Download, Kanban, ChevronDown, Zap, Upload,
 } from "lucide-react";
 import { getCompletenessScore } from "../utils/completenessScore";
 
@@ -218,6 +219,7 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState(null);
   const [duplicating, setDuplicating] = useState(null);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [cleaning, setCleaning] = useState(false);
@@ -415,6 +417,10 @@ export default function Dashboard() {
         />
       )}
 
+      {showImportModal && (
+        <ImportResumeModal onClose={() => setShowImportModal(false)} />
+      )}
+
       {deleteTarget && (
         <DeleteConfirmModal
           resume={deleteTarget}
@@ -449,6 +455,16 @@ export default function Dashboard() {
               <span className="hidden xs:inline">Job Tracker</span>
               <span className="xs:hidden">Tracker</span>
             </button>
+            {!atFreeLimit && (
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 border border-gray-300 text-gray-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl font-semibold hover:border-blue-400 hover:text-blue-600 transition-colors text-sm"
+              >
+                <Upload className="w-4 h-4" />
+                <span className="hidden xs:inline">Import Resume</span>
+                <span className="xs:hidden">Import</span>
+              </button>
+            )}
             <button
               onClick={() => atFreeLimit ? navigate('/#pricing') : setShowNewModal(true)}
               className={`flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold transition-colors shadow-md text-sm ${
@@ -515,12 +531,20 @@ export default function Dashboard() {
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">No resumes yet</h2>
             <p className="text-gray-500 mb-6">Create your first professional resume in minutes.</p>
-            <button
-              onClick={() => setShowNewModal(true)}
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Create My First Resume
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={() => setShowNewModal(true)}
+                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Create My First Resume
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                <Upload className="w-4 h-4" /> Import from PDF/Word
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

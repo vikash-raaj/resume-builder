@@ -5,7 +5,7 @@ import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import { ResumeProvider } from "../context/ResumeContext";
 import BuilderLayout from "../components/builder/BuilderLayout";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, X, Sparkles } from "lucide-react";
 
 export default function BuilderPage() {
   const { id } = useParams();
@@ -13,12 +13,18 @@ export default function BuilderPage() {
   const { user } = useAuth();
   const [initialResume, setInitialResume] = useState(null);
   const [loading, setLoading] = useState(!!id);
+  const [importBanner, setImportBanner] = useState(null);
 
   useEffect(() => {
     if (!id) {
+      const { importedResume, importedFileName, importedAiEnhanced, newTitle } = location.state || {};
+      if (importedResume) {
+        setInitialResume({ template: "riga", title: importedFileName?.replace(/\.(pdf|docx)$/i, "") || "", ...importedResume });
+        setImportBanner({ fileName: importedFileName, aiEnhanced: importedAiEnhanced });
+        return;
+      }
       // New resume — title comes from Dashboard's navigation state
-      const newTitle = location.state?.newTitle || "";
-      setInitialResume({ template: "riga", title: newTitle });
+      setInitialResume({ template: "riga", title: newTitle || "" });
       return;
     }
     if (!user) return;
@@ -46,6 +52,18 @@ export default function BuilderPage() {
   return (
     <ResumeProvider initial={initialResume}>
       <BuilderLayout resumeId={id} />
+      {importBanner && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-lg bg-indigo-700 text-white text-sm font-medium max-w-lg no-print">
+          {importBanner.aiEnhanced ? <Sparkles className="w-4 h-4 flex-shrink-0" /> : <Check className="w-4 h-4 flex-shrink-0" />}
+          <span>
+            Imported from {importBanner.fileName || "your file"} — please review the details below.
+            {!importBanner.aiEnhanced && " Add an AI key for smarter section splitting."}
+          </span>
+          <button onClick={() => setImportBanner(null)} className="flex-shrink-0 hover:opacity-70">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </ResumeProvider>
   );
 }

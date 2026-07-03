@@ -68,7 +68,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} TheResume.io. All rights reserved. Built with React + Firebase.
+            © {new Date().getFullYear()} TheResume.io. All rights reserved.
           </p>
         </div>
       </div>

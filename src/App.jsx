@@ -21,6 +21,7 @@ import SalaryInsightsPage from "./pages/SalaryInsightsPage";
 import ApplicationKitPage from "./pages/ApplicationKitPage";
 import ResumeExamplesPage from "./pages/ResumeExamplesPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import HelpCenterPage from "./pages/HelpCenterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="/salary-insights" element={<SalaryInsightsPage />} />
             <Route path="/application-kit" element={<ApplicationKitPage />} />
             <Route path="/resume-examples" element={<ResumeExamplesPage />} />
+            <Route path="/help-center" element={<HelpCenterPage />} />
 
             {/* Legacy redirect */}
             <Route path="/photo-library" element={<Dashboard />} />

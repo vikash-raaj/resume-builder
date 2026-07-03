@@ -98,7 +98,7 @@ export async function exportToDocx(resume, filename = 'Resume') {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: exp.position || '', bold: true, size: 22, font: 'Calibri' }),
+            new TextRun({ text: exp.title || '', bold: true, size: 22, font: 'Calibri' }),
             new TextRun({ text: exp.company ? `  |  ${exp.company}` : '', size: 22, font: 'Calibri', color: '555555' }),
           ],
           spacing: { before: 120, after: 40 },

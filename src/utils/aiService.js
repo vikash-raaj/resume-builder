@@ -12,7 +12,7 @@ export function clearAIKey() {
   localStorage.removeItem(AI_KEY_STORAGE);
 }
 
-async function callClaude(prompt, systemPrompt = '') {
+async function callClaude(prompt, systemPrompt = '', maxTokens = 600) {
   const key = getStoredAIKey();
   if (!key) throw new Error('NO_KEY');
 
@@ -26,7 +26,7 @@ async function callClaude(prompt, systemPrompt = '') {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
+      max_tokens: maxTokens,
       system: systemPrompt || 'You are an expert resume writer. Write concise, impactful, professional content. Return only the requested text — no preamble, no quotes, no extra explanation.',
       messages: [{ role: 'user', content: prompt }],
     }),
@@ -110,4 +110,31 @@ Requirements:
 - 200-280 words`,
     'You are an expert cover letter writer. Write compelling, human cover letters that stand out.',
   );
+}
+
+export async function parseResumeFromText(rawText) {
+  const text = await callClaude(
+    `Extract structured resume data from the raw text below (pulled from an uploaded PDF/DOCX resume) and return ONLY a single JSON object — no markdown fences, no commentary.
+
+Raw resume text:
+"""
+${rawText.slice(0, 12000)}
+"""
+
+Return JSON with exactly this shape (omit a field or leave it as an empty string/array if not found — never invent data):
+{
+  "personalInfo": { "firstName": "", "lastName": "", "jobTitle": "", "email": "", "phone": "", "city": "", "country": "", "linkedin": "", "website": "" },
+  "summary": "",
+  "experience": [{ "title": "", "company": "", "city": "", "startDate": "", "endDate": "", "current": false, "description": "" }],
+  "education": [{ "school": "", "degree": "", "field": "", "gradYear": "", "city": "" }],
+  "skills": [{ "name": "" }],
+  "certifications": [""],
+  "languages": [""]
+}`,
+    'You are a precise resume-parsing engine. Extract only what is actually present in the text. Output strict, valid JSON only.',
+    2000,
+  );
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI did not return JSON');
+  return JSON.parse(jsonMatch[0]);
 }
