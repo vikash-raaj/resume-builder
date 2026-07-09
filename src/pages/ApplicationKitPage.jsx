@@ -6,6 +6,7 @@ import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
 import AuthPrompt from '../components/AuthPrompt';
+import AdBanner from '../components/AdBanner';
 
 function ItemCard({ icon: Icon, label, name, color, onOpen }) {
   return (
@@ -209,6 +210,8 @@ export default function ApplicationKitPage() {
             ))}
           </div>
         </div>
+
+        <AdBanner className="mt-10" />
       </div>
     </AppLayout>
   );

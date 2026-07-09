@@ -11,6 +11,7 @@ import { useSubscription } from "../context/SubscriptionContext";
 import AppLayout from "../components/AppLayout";
 import AuthPrompt from "../components/AuthPrompt";
 import AdBanner from "../components/AdBanner";
+import VisitorCounter from "../components/VisitorCounter";
 import ImportResumeModal from "../components/ImportResumeModal";
 import RigaTemplate from "../components/builder/templates/RigaTemplate";
 import ModernTemplate from "../components/builder/templates/ModernTemplate";
@@ -682,7 +683,10 @@ export default function Dashboard() {
           </div>
         )}
 
-        <AdBanner className="mt-10" />
+        <div className="mt-10 flex justify-center">
+          <VisitorCounter />
+        </div>
+        <AdBanner className="mt-6" />
       </div>
 
       <div className="hidden print:block">

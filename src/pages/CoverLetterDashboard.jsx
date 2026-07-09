@@ -9,6 +9,7 @@ import { db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";
 import AppLayout from "../components/AppLayout";
 import AuthPrompt from "../components/AuthPrompt";
+import AdBanner from "../components/AdBanner";
 import {
   Plus, Mail, Trash2, Edit3, Clock, Loader2,
   Copy, X, AlertCircle, CheckCircle, Download,
@@ -388,6 +389,8 @@ export default function CoverLetterDashboard() {
               ))}
             </div>
           )}
+
+          <AdBanner className="mt-10" />
         </div>
 
         {/* Hidden print template — rendered off-screen, printed on demand */}

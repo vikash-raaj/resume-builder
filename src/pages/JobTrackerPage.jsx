@@ -9,6 +9,7 @@ import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
 import AuthPrompt from '../components/AuthPrompt';
+import AdBanner from '../components/AdBanner';
 
 const COLUMNS = [
   { key: 'wishlist', label: 'Wishlist', color: 'bg-gray-100', textColor: 'text-gray-600', dot: 'bg-gray-400' },
@@ -340,6 +341,8 @@ export default function JobTrackerPage() {
             </div>
           </>
         )}
+
+        <AdBanner className="mt-10" />
       </div>
 
       {showModal && editJob && (

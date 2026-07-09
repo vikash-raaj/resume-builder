@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import AdBanner from '../components/AdBanner';
 
 const EXAMPLES = [
   { industry: 'Technology', role: 'Software Engineer', template: 'tech', accent: '#0f172a', tags: ['Entry Level', 'Tech', 'ATS-Friendly'], preview: '🖥️', highlights: ['Monospace terminal aesthetic', 'Skills progress bars', 'Tech-forward layout'] },
@@ -123,6 +124,8 @@ export default function ResumeExamplesPage() {
             </div>
           )}
         </div>
+
+        <AdBanner className="mt-10" />
       </div>
     </AppLayout>
   );

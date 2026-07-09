@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, AlertCircle, ChevronDown, ChevronUp, TrendingUp, Zap } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import AdBanner from '../components/AdBanner';
 
 const SECTIONS = [
   {
@@ -253,6 +254,8 @@ export default function LinkedInOptimizationPage() {
             </div>
           </div>
         </div>
+
+        <AdBanner className="mt-10" />
       </div>
     </AppLayout>
   );

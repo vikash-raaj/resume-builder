@@ -1,32 +1,57 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const AD_CLIENT = "ca-pub-2133408429040664";
+const AD_SLOT = "3564738850";
+const MOBILE_QUERY = "(max-width: 767px)";
 
 export default function AdBanner({ className = "" }) {
-  const adRef = useRef(null);
-  const pushed = useRef(false);
+  const pushedFor = useRef(null);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
 
   useEffect(() => {
-    if (pushed.current) return;
-    try {
-      if (adRef.current && adRef.current.offsetWidth > 0) {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        pushed.current = true;
-      }
-    } catch (e) {
-      // adsbygoogle not loaded yet
-    }
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const handler = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // Re-push whenever the breakpoint flips, since the <ins> below is
+  // keyed per-breakpoint and a new element gets mounted each time.
+  useEffect(() => {
+    if (pushedFor.current === isMobile) return;
+    try {
+      pushedFor.current = isMobile;
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch {
+      // adsbygoogle not loaded yet
+    }
+  }, [isMobile]);
+
   return (
-    <div className={className}>
-      <ins
-        ref={adRef}
-        className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-client="ca-pub-2133408429040664"
-        data-ad-slot="3564738850"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      />
+    <div className={`w-full max-w-3xl mx-auto text-center ${className}`}>
+      {isMobile ? (
+        <ins
+          key="mobile-ad"
+          className="adsbygoogle"
+          style={{ display: "inline-block", width: "320px", height: "50px" }}
+          data-ad-client={AD_CLIENT}
+          data-ad-slot={AD_SLOT}
+          data-full-width-responsive="false"
+        />
+      ) : (
+        <ins
+          key="desktop-ad"
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-client={AD_CLIENT}
+          data-ad-slot={AD_SLOT}
+          data-ad-format="horizontal"
+          data-full-width-responsive="true"
+        />
+      )}
+      <p className="text-[9px] text-gray-400 text-center mt-0.5 select-none">
+        Advertisement
+      </p>
     </div>
   );
 }

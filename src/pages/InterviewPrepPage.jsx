@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, ChevronDown, ChevronUp, Star, Lightbulb, Check, ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import AdBanner from '../components/AdBanner';
 import { evaluateInterviewAnswer, getStoredAIKey } from '../utils/aiService';
 
 const CATEGORIES = [
@@ -276,6 +277,8 @@ export default function InterviewPrepPage() {
             ))}
           </div>
         </div>
+
+        <AdBanner className="mt-10" />
       </div>
     </AppLayout>
   );

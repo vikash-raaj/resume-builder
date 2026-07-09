@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, DollarSign, TrendingUp, Search } from 'lucide-react';
 import AppLayout from '../components/AppLayout';
+import AdBanner from '../components/AdBanner';
 
 const SALARY_DATA = {
   // Engineering
@@ -254,6 +255,8 @@ export default function SalaryInsightsPage() {
             </div>
           </div>
         </div>
+
+        <AdBanner className="mt-10" />
       </div>
     </AppLayout>
   );
