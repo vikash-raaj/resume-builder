@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FileText, Mail, MailOpen, Send, Briefcase,
   MessageCircle, TrendingUp, Globe, Phone, Kanban, DollarSign, LayoutGrid, Zap, Menu, X, HelpCircle,
-  Link2, Shield, Copy, Check, ExternalLink, Loader2,
+  Link2, Shield, Copy, Check, ExternalLink, Loader2, Info,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useSubscription } from "../context/SubscriptionContext";
@@ -212,6 +212,12 @@ function ContactModal({ onClose }) {
   );
 }
 
+const ContactModalContext = createContext(() => {});
+
+export function useContactModal() {
+  return useContext(ContactModalContext);
+}
+
 export default function AppLayout({ children }) {
   const location = useLocation();
   const { user } = useAuth();
@@ -278,6 +284,18 @@ export default function AppLayout({ children }) {
           <HelpCircle className={`w-4 h-4 ${location.pathname === "/help-center" ? "text-blue-500" : "text-gray-400"}`} />
           Help Center
         </Link>
+        <Link
+          to="/about"
+          onClick={() => setSidebarOpen(false)}
+          className={`flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors ${
+            location.pathname === "/about"
+              ? "text-blue-600 bg-blue-50"
+              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          }`}
+        >
+          <Info className={`w-4 h-4 ${location.pathname === "/about" ? "text-blue-500" : "text-gray-400"}`} />
+          About
+        </Link>
         <button className="flex items-center gap-3 px-5 py-2.5 w-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
           <Globe className="w-4 h-4 text-gray-400" />
           English
@@ -329,6 +347,7 @@ export default function AppLayout({ children }) {
   );
 
   return (
+    <ContactModalContext.Provider value={() => setShowContact(true)}>
     <div className="flex min-h-screen bg-gray-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -371,5 +390,6 @@ export default function AppLayout({ children }) {
 
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
     </div>
+    </ContactModalContext.Provider>
   );
 }
