@@ -63,6 +63,12 @@ function ContactInfoRow({ icon: Icon, label, href, copyable }) {
   );
 }
 
+function openMailtoFallback({ name, email, message }) {
+  const subject = `TheResume.io contact from ${name || "website visitor"}`;
+  const body = `${message}\n\nFrom: ${name} <${email}>`;
+  window.location.href = `mailto:${CONTACT_INFO.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 function ContactModal({ onClose }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | success | error
@@ -88,9 +94,11 @@ function ContactModal({ onClose }) {
         setForm({ name: "", email: "", message: "" });
       } else {
         setStatus("error");
+        openMailtoFallback(form);
       }
     } catch {
       setStatus("error");
+      openMailtoFallback(form);
     }
   };
 
@@ -188,7 +196,7 @@ function ContactModal({ onClose }) {
 
                 {status === "error" && (
                   <p className="text-xs text-red-100 bg-red-500/20 border border-red-300/30 rounded-lg px-3 py-2">
-                    Something went wrong. Please email me directly at {CONTACT_INFO.email}
+                    Something went wrong, so we opened your email app instead — send it to {CONTACT_INFO.email} if it didn't open automatically.
                   </p>
                 )}
 
