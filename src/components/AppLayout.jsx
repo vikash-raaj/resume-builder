@@ -325,7 +325,7 @@ export default function AppLayout({ children }) {
             className="w-full flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-3 py-2.5 text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
           >
             <Zap className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Upgrade to Pro — $9/mo</span>
+            <span>Upgrade to Pro — $1/mo</span>
           </button>
         </div>
       )}

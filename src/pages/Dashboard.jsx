@@ -516,7 +516,7 @@ export default function Dashboard() {
               onClick={() => navigate('/#pricing')}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex-shrink-0 self-start sm:self-auto"
             >
-              <Zap className="w-3.5 h-3.5" /> Upgrade — $9/mo
+              <Zap className="w-3.5 h-3.5" /> Upgrade — $1/mo
             </button>
           </div>
         )}

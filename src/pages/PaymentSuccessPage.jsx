@@ -1,26 +1,30 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, Loader2, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useAuth } from '../context/AuthContext';
 
+// Stripe's webhook usually lands within a couple of seconds of redirect,
+// but this is a hard ceiling so a visitor is never stuck on a spinner.
+const ACTIVATION_TIMEOUT_MS = 15000;
+
 export default function PaymentSuccessPage() {
   const { user } = useAuth();
-  const { activatePro, isPro } = useSubscription();
+  const { isPro, loading } = useSubscription();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [activated, setActivated] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+
+  const activated = !loading && isPro;
 
   useEffect(() => {
-    // In production: verify the Stripe session server-side via webhook.
-    // Here, we trust the redirect and activate Pro in Firestore directly.
-    // Stripe webhook should also write the subscription doc for server-side safety.
-    if (user && !isPro) {
-      activatePro().then(() => setActivated(true));
-    } else if (isPro) {
-      setActivated(true);
-    }
-  }, [user, isPro]);
+    if (activated) return;
+    const t = setTimeout(() => setTimedOut(true), ACTIVATION_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [activated]);
+
+  useEffect(() => {
+    if (!user) navigate('/');
+  }, [user, navigate]);
 
   useEffect(() => {
     if (activated) {
@@ -33,11 +37,27 @@ export default function PaymentSuccessPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white rounded-3xl p-12 shadow-2xl text-center max-w-md w-full mx-4">
         {!activated ? (
-          <>
-            <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Activating Pro…</h1>
-            <p className="text-gray-500 text-sm">Just a moment while we set up your account.</p>
-          </>
+          timedOut ? (
+            <>
+              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Still confirming your payment…</h1>
+              <p className="text-gray-500 text-sm mb-6">
+                This is taking longer than usual. Your payment may still be processing — refresh in a minute, or reach out if Pro doesn't activate.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+              >
+                Check again
+              </button>
+            </>
+          ) : (
+            <>
+              <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirming your payment…</h1>
+              <p className="text-gray-500 text-sm">Just a moment while Stripe confirms the payment and we activate Pro.</p>
+            </>
+          )
         ) : (
           <>
             <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">

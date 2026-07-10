@@ -17,7 +17,7 @@ export default function ProGate({ feature, children }) {
           onClick={() => navigate('/#pricing')}
         >
           <Zap className="w-4 h-4" />
-          Unlock with Pro — $9/mo
+          Unlock with Pro — $1/mo
         </div>
         {feature && <p className="text-xs text-gray-500 mt-2">{feature}</p>}
       </div>

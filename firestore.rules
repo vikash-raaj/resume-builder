@@ -2,7 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId}/{collection}/{docId} {
-      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId
+                                  && collection != 'subscription';
+    }
+
+    // Subscription status is only ever written by the Stripe webhook Cloud
+    // Function (via the Admin SDK, which bypasses these rules). Clients may
+    // read their own status but can never grant themselves Pro.
+    match /users/{userId}/subscription/{docId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
     }
 
     // Publicly shared resumes — anyone can read, only owner can write
