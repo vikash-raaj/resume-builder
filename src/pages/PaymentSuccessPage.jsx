@@ -4,8 +4,8 @@ import { CheckCircle, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useAuth } from '../context/AuthContext';
 
-// Stripe's webhook usually lands within a couple of seconds of redirect,
-// but this is a hard ceiling so a visitor is never stuck on a spinner.
+// The Lemon Squeezy webhook usually lands within a couple of seconds of
+// redirect, but this is a hard ceiling so a visitor is never stuck on a spinner.
 const ACTIVATION_TIMEOUT_MS = 15000;
 
 export default function PaymentSuccessPage() {
@@ -55,7 +55,7 @@ export default function PaymentSuccessPage() {
             <>
               <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirming your payment…</h1>
-              <p className="text-gray-500 text-sm">Just a moment while Stripe confirms the payment and we activate Pro.</p>
+              <p className="text-gray-500 text-sm">Just a moment while we confirm the payment and activate Pro.</p>
             </>
           )
         ) : (

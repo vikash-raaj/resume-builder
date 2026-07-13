@@ -6,9 +6,9 @@ service cloud.firestore {
                                   && collection != 'subscription';
     }
 
-    // Subscription status is only ever written by the Stripe webhook Cloud
-    // Function (via the Admin SDK, which bypasses these rules). Clients may
-    // read their own status but can never grant themselves Pro.
+    // Subscription status is only ever written by the Lemon Squeezy webhook
+    // Cloud Function (via the Admin SDK, which bypasses these rules). Clients
+    // may read their own status but can never grant themselves Pro.
     match /users/{userId}/subscription/{docId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if false;
