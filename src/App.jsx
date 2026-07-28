@@ -23,6 +23,10 @@ import ResumeExamplesPage from "./pages/ResumeExamplesPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import HelpCenterPage from "./pages/HelpCenterPage";
 import AboutPage from "./pages/AboutPage";
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -71,6 +75,10 @@ export default function App() {
             <Route path="/resume-examples" element={<ResumeExamplesPage />} />
             <Route path="/help-center" element={<HelpCenterPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsOfServicePage />} />
 
             {/* Legacy redirect */}
             <Route path="/photo-library" element={<Dashboard />} />
