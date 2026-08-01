@@ -26,6 +26,13 @@ const T = {
     contact: 'Contact',
     references: 'References',
     profile: 'Profile',
+    volunteer: 'Volunteer Work',
+    awards: 'Awards & Honors',
+    hobbies: 'Hobbies',
+    courses: 'Courses',
+    internships: 'Internships',
+    publications: 'Publications',
+    custom: 'Additional Information',
   },
   es: {
     experience: 'Experiencia Laboral',
@@ -173,5 +180,8 @@ const T = {
 };
 
 export function getTranslations(langCode) {
-  return T[langCode] || T.en;
+  // Merge onto English so any key missing from a non-English language block
+  // (e.g. a newer section label not yet translated) still renders instead of
+  // coming back undefined.
+  return { ...T.en, ...(T[langCode] || {}) };
 }

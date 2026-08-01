@@ -1,5 +1,6 @@
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { getTranslations } from '../../../utils/resumeTranslations';
+import { DEFAULT_SECTION_ORDER } from '../../../utils/sectionOrder';
 
 const DEFAULT_ACCENT = '#1e3a6e';
 
@@ -47,12 +48,15 @@ export default function RigaTemplate({ resume }) {
     certifications = [],
     languages = [],
     personalDetails = {},
+    projects = [], volunteer = [], awards = [], hobbies = '', courses = [],
+    references = [], internships = [], publications = [], customSection,
   } = resume;
 
   const accent = resume.accentColor || DEFAULT_ACCENT;
   const t = getTranslations(resume.language || 'en');
   const fullName = `${p.firstName || ''} ${p.lastName || ''}`.trim();
   const address = [p.address, p.city, p.country].filter(Boolean).join(', ');
+  const order = resume.sectionOrder || DEFAULT_SECTION_ORDER;
 
   return (
     <div className="bg-white w-full min-h-full" style={{ fontFamily: 'Georgia, serif', fontSize: '9.5px', lineHeight: '1.45' }}>
@@ -255,58 +259,84 @@ export default function RigaTemplate({ resume }) {
         {/* ── RIGHT COLUMN ── */}
         <div className="flex-1 px-6 py-5 space-y-5">
 
-          {/* About / Summary */}
-          {summary && (
-            <div>
-              <SectionTitle title="About Me" accent={accent} />
-              <div
-                className="text-gray-700 leading-relaxed"
-                style={{ fontSize: '8.5px', textAlign: 'justify' }}
-                dangerouslySetInnerHTML={{ __html: summary }}
-              />
-            </div>
-          )}
+          {(() => {
+            const mainFlowSections = {
+              summary: summary && (
+                <div key="summary">
+                  <SectionTitle title="About Me" accent={accent} />
+                  <div
+                    className="text-gray-700 leading-relaxed"
+                    style={{ fontSize: '8.5px', textAlign: 'justify' }}
+                    dangerouslySetInnerHTML={{ __html: summary }}
+                  />
+                </div>
+              ),
+              experience: experience.length > 0 && (
+                <div key="experience">
+                  <SectionTitle title={t.experience} accent={accent} />
+                  <div className="space-y-4">
+                    {experience.map((job, i) => (
+                      <div key={i} className="flex gap-2">
+                        <Dot accent={accent} />
+                        <div className="flex-1 min-w-0">
+                          {/* Company + date row */}
+                          <div className="flex justify-between items-baseline gap-2">
+                            <p className="text-gray-600" style={{ fontSize: '8.5px' }}>
+                              {[job.company, job.city].filter(Boolean).join(' | ')}
+                            </p>
+                            <p className="text-gray-500 uppercase whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>
+                              {job.startDate}
+                              {(job.startDate && (job.current || job.endDate)) ? ' - ' : ''}
+                              {job.current ? 'Present' : job.endDate}
+                            </p>
+                          </div>
 
-          {/* Work Experience */}
-          {experience.length > 0 && (
+                          {/* Job title */}
+                          {job.title && (
+                            <p className="font-black uppercase tracking-wide mt-0.5" style={{ color: accent, fontSize: '8.5px' }}>
+                              {job.title}
+                            </p>
+                          )}
+
+                          {/* Description */}
+                          {job.description && (
+                            <div
+                              className="text-gray-700 mt-1 leading-relaxed
+                                [&_ul]:list-none [&_ul]:pl-0 [&_ul]:mt-1 [&_ul]:space-y-0.5
+                                [&_ol]:list-none [&_ol]:pl-0 [&_ol]:mt-1 [&_ol]:space-y-0.5
+                                [&_li]:flex [&_li]:gap-1.5
+                                [&_li]:before:content-['•'] [&_li]:before:text-gray-400 [&_li]:before:flex-shrink-0"
+                              style={{ fontSize: '8.5px' }}
+                              dangerouslySetInnerHTML={{ __html: job.description }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            };
+            // Education/skills/languages/certifications/personal details live
+            // in the fixed left column — only summary/experience share this
+            // right-column flow and are reorderable relative to each other.
+            return order.filter((k) => mainFlowSections[k]).map((k) => mainFlowSections[k]);
+          })()}
+
+          {projects.length > 0 && (
             <div>
-              <SectionTitle title={t.experience} accent={accent} />
-              <div className="space-y-4">
-                {experience.map((job, i) => (
+              <SectionTitle title={t.projects} accent={accent} />
+              <div className="space-y-3">
+                {projects.map((proj, i) => (
                   <div key={i} className="flex gap-2">
                     <Dot accent={accent} />
                     <div className="flex-1 min-w-0">
-                      {/* Company + date row */}
                       <div className="flex justify-between items-baseline gap-2">
-                        <p className="text-gray-600" style={{ fontSize: '8.5px' }}>
-                          {[job.company, job.city].filter(Boolean).join(' | ')}
-                        </p>
-                        <p className="text-gray-500 uppercase whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>
-                          {job.startDate}
-                          {(job.startDate && (job.current || job.endDate)) ? ' - ' : ''}
-                          {job.current ? 'Present' : job.endDate}
-                        </p>
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>{proj.name}</p>
+                        {proj.year && <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>{proj.year}</p>}
                       </div>
-
-                      {/* Job title */}
-                      {job.title && (
-                        <p className="font-black uppercase tracking-wide mt-0.5" style={{ color: accent, fontSize: '8.5px' }}>
-                          {job.title}
-                        </p>
-                      )}
-
-                      {/* Description */}
-                      {job.description && (
-                        <div
-                          className="text-gray-700 mt-1 leading-relaxed
-                            [&_ul]:list-none [&_ul]:pl-0 [&_ul]:mt-1 [&_ul]:space-y-0.5
-                            [&_ol]:list-none [&_ol]:pl-0 [&_ol]:mt-1 [&_ol]:space-y-0.5
-                            [&_li]:flex [&_li]:gap-1.5
-                            [&_li]:before:content-['•'] [&_li]:before:text-gray-400 [&_li]:before:flex-shrink-0"
-                          style={{ fontSize: '8.5px' }}
-                          dangerouslySetInnerHTML={{ __html: job.description }}
-                        />
-                      )}
+                      {proj.url && <p className="text-gray-500" style={{ fontSize: '8px' }}>{proj.url}</p>}
+                      {proj.description && <p className="text-gray-700 mt-0.5 leading-relaxed" style={{ fontSize: '8.5px' }}>{proj.description}</p>}
                     </div>
                   </div>
                 ))}
@@ -314,7 +344,146 @@ export default function RigaTemplate({ resume }) {
             </div>
           )}
 
-          {/* Certifications — also shown in right col if no left data */}
+          {volunteer.length > 0 && (
+            <div>
+              <SectionTitle title={t.volunteer} accent={accent} />
+              <div className="space-y-3">
+                {volunteer.map((v, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>
+                          {[v.role, v.organization].filter(Boolean).join(' · ')}
+                        </p>
+                        <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>
+                          {[v.startDate, v.endDate].filter(Boolean).join(' – ')}
+                        </p>
+                      </div>
+                      {v.description && <p className="text-gray-700 mt-0.5 leading-relaxed" style={{ fontSize: '8.5px' }}>{v.description}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {awards.length > 0 && (
+            <div>
+              <SectionTitle title={t.awards} accent={accent} />
+              <div className="space-y-2">
+                {awards.map((a, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>{a.title}</p>
+                        {a.year && <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>{a.year}</p>}
+                      </div>
+                      {a.issuer && <p className="text-gray-500" style={{ fontSize: '8px' }}>{a.issuer}</p>}
+                      {a.description && <p className="text-gray-700 mt-0.5 leading-relaxed" style={{ fontSize: '8.5px' }}>{a.description}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {internships.length > 0 && (
+            <div>
+              <SectionTitle title={t.internships} accent={accent} />
+              <div className="space-y-3">
+                {internships.map((it, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="text-gray-600" style={{ fontSize: '8.5px' }}>{it.company}</p>
+                        <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>
+                          {[it.startDate, it.endDate].filter(Boolean).join(' – ')}
+                        </p>
+                      </div>
+                      <p className="font-black uppercase tracking-wide mt-0.5" style={{ color: accent, fontSize: '8.5px' }}>{it.title}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {publications.length > 0 && (
+            <div>
+              <SectionTitle title={t.publications} accent={accent} />
+              <div className="space-y-2">
+                {publications.map((pub, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>{pub.title}</p>
+                        {pub.year && <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>{pub.year}</p>}
+                      </div>
+                      {pub.publisher && <p className="text-gray-500" style={{ fontSize: '8px' }}>{pub.publisher}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {courses.length > 0 && (
+            <div>
+              <SectionTitle title={t.courses} accent={accent} />
+              <div className="space-y-2">
+                {courses.map((c, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>{c.name}</p>
+                        {c.year && <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>{c.year}</p>}
+                      </div>
+                      {c.institution && <p className="text-gray-500" style={{ fontSize: '8px' }}>{c.institution}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {references.length > 0 && (
+            <div>
+              <SectionTitle title={t.references} accent={accent} />
+              <div className="space-y-2">
+                {references.map((ref, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Dot accent={accent} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline gap-2">
+                        <p className="font-black uppercase tracking-wide" style={{ color: accent, fontSize: '8.5px' }}>{ref.name}</p>
+                        {ref.contact && <p className="text-gray-500 whitespace-nowrap flex-shrink-0" style={{ fontSize: '7.5px' }}>{ref.contact}</p>}
+                      </div>
+                      {ref.company && <p className="text-gray-500" style={{ fontSize: '8px' }}>{ref.company}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hobbies && (
+            <div>
+              <SectionTitle title={t.hobbies} accent={accent} />
+              <p className="text-gray-700 leading-relaxed" style={{ fontSize: '8.5px' }}>{hobbies}</p>
+            </div>
+          )}
+
+          {customSection?.content && (
+            <div>
+              <SectionTitle title={customSection.title || t.custom} accent={accent} />
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line" style={{ fontSize: '8.5px' }}>{customSection.content}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -35,7 +35,8 @@ export default function AIKeySetup({ onClose, onSaved }) {
           </div>
 
           <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            AI features use the Claude API. Enter your Anthropic API key — it's stored only in your browser and never sent to our servers.
+            Sign in to use AI features with no setup — every account includes free monthly AI credits.
+            Prefer to use your own Anthropic account instead? Paste an API key below (stored only in your browser, never sent to our servers).
           </p>
 
           <a

@@ -27,6 +27,7 @@ import SkillLevelSlider from '../SkillLevelSlider';
 import { tailorResumeToJob, getStoredAIKey } from '../../../utils/aiService';
 import AIKeySetup from '../AIKeySetup';
 import { RESUME_LANGUAGES } from '../../../utils/resumeTranslations';
+import { DEFAULT_SECTION_ORDER } from '../../../utils/sectionOrder';
 
 const TEMPLATES = [
   { label: 'Riga', value: 'riga', tag: 'Classic' },
@@ -44,10 +45,6 @@ const ACCENT_COLORS = [
 ];
 const LANG_LEVELS = ['Superior/Native', 'Highly Proficient', 'Very Good', 'Good Working', 'Working Knowledge'];
 const LEVELS = ['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'];
-
-const DEFAULT_SECTION_ORDER = [
-  'personalInfo', 'experience', 'education', 'skills', 'summary', 'languages', 'personalDetails',
-];
 
 const BLOCKS = [
   { key: 'projects', label: 'Projects', icon: Code2 },
@@ -699,13 +696,28 @@ function JDTailoringPanel({ resume }) {
   );
 }
 
+// Blocks whose data (if any) implies the accordion should stay visible even
+// if the user hasn't explicitly re-toggled it since loading this resume.
+const blockHasData = (resume, key) => {
+  if (key === 'hobbies') return !!resume.hobbies;
+  if (key === 'custom') return !!(resume.customSection?.title || resume.customSection?.content);
+  return (resume[key] || []).length > 0;
+};
+
 export default function FinishStep({ onNext, onBack }) {
-  const { resume, setTemplate, setAccentColor, setTitle, setLanguage } = useResume();
+  const {
+    resume, setTemplate, setAccentColor, setTitle, setLanguage,
+    setSectionOrder, setEnabledBlocks,
+  } = useResume();
   const p = resume.personalInfo;
 
-  const [sectionOrder, setSectionOrder] = useState(DEFAULT_SECTION_ORDER);
   const [activeId, setActiveId] = useState(null);
-  const [enabledBlocks, setEnabledBlocks] = useState([]);
+
+  const sectionOrder = resume.sectionOrder || DEFAULT_SECTION_ORDER;
+  const enabledBlocks = Array.from(new Set([
+    ...(resume.enabledBlocks || []),
+    ...BLOCKS.map((b) => b.key).filter((key) => blockHasData(resume, key)),
+  ]));
 
   const displayTitle =
     resume.title || `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'My Resume';
@@ -720,12 +732,12 @@ export default function FinishStep({ onNext, onBack }) {
   const handleDragEnd = ({ active, over }) => {
     setActiveId(null);
     if (!over || active.id === over.id) return;
-    setSectionOrder((prev) => arrayMove(prev, prev.indexOf(active.id), prev.indexOf(over.id)));
+    setSectionOrder(arrayMove(sectionOrder, sectionOrder.indexOf(active.id), sectionOrder.indexOf(over.id)));
   };
 
   const toggleBlock = (key) => {
-    setEnabledBlocks((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    setEnabledBlocks(
+      enabledBlocks.includes(key) ? enabledBlocks.filter((k) => k !== key) : [...enabledBlocks, key]
     );
   };
 

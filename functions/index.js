@@ -15,6 +15,11 @@ const LEMONSQUEEZY_VARIANT_ID_YEARLY = defineString("LEMONSQUEEZY_VARIANT_ID_YEA
 
 const LEMONSQUEEZY_API_BASE = "https://api.lemonsqueezy.com/v1";
 
+const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
+const AI_MODEL = "claude-haiku-4-5-20251001";
+const AI_FREE_MONTHLY_QUOTA = 30;
+const AI_MAX_TOKENS_CEILING = 2000;
+
 const ALLOWED_ORIGINS = new Set([
   "https://theresumeio.com",
   "https://resumecraft-app.web.app",
@@ -241,6 +246,89 @@ exports.lemonSqueezyWebhook = onRequest(
     } catch (err) {
       logger.error("Error handling webhook event", err);
       return res.status(500).send();
+    }
+  }
+);
+
+// Proxies Claude API calls so free/non-technical users don't need their own
+// Anthropic key. Requires a signed-in Firebase user; Pro subscribers get
+// unlimited use, free-tier users are capped at AI_FREE_MONTHLY_QUOTA
+// requests per calendar month (tracked in Firestore, reset by the new
+// month's document key rather than a cron job).
+exports.aiProxy = onRequest(
+  { secrets: [ANTHROPIC_API_KEY], cors: false },
+  async (req, res) => {
+    applyCors(req, res);
+    if (req.method === "OPTIONS") return res.status(204).send("");
+    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+    const authHeader = req.headers.authorization || "";
+    const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!idToken) return res.status(401).json({ error: "Missing Authorization header" });
+
+    let uid;
+    try {
+      ({ uid } = await admin.auth().verifyIdToken(idToken));
+    } catch (err) {
+      logger.warn("Invalid ID token", err);
+      return res.status(401).json({ error: "Invalid ID token" });
+    }
+
+    const prompt = typeof req.body?.prompt === "string" ? req.body.prompt : "";
+    if (!prompt.trim()) return res.status(400).json({ error: "Missing prompt" });
+    const systemPrompt = typeof req.body?.systemPrompt === "string" ? req.body.systemPrompt : undefined;
+    const maxTokens = Math.min(Number(req.body?.maxTokens) || 600, AI_MAX_TOKENS_CEILING);
+
+    try {
+      const statusDoc = await db.doc(`users/${uid}/subscription/status`).get();
+      const sub = statusDoc.data() || {};
+      const isPro = sub.status === "active" && sub.plan === "pro";
+
+      if (!isPro) {
+        const monthKey = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+        const usageRef = db.doc(`users/${uid}/aiUsage/${monthKey}`);
+        const withinQuota = await db.runTransaction(async (tx) => {
+          const snap = await tx.get(usageRef);
+          const count = snap.data()?.count || 0;
+          if (count >= AI_FREE_MONTHLY_QUOTA) return false;
+          tx.set(usageRef, { count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+          return true;
+        });
+        if (!withinQuota) {
+          return res.status(429).json({
+            error: `Free plan is limited to ${AI_FREE_MONTHLY_QUOTA} AI requests per month. Upgrade to Pro for unlimited use.`,
+            code: "QUOTA_EXCEEDED",
+          });
+        }
+      }
+
+      const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY.value(),
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          max_tokens: maxTokens,
+          system: systemPrompt || "You are an expert resume writer. Write concise, impactful, professional content. Return only the requested text — no preamble, no quotes, no extra explanation.",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!claudeRes.ok) {
+        const errBody = await claudeRes.json().catch(() => ({}));
+        logger.error("Anthropic API error", claudeRes.status, errBody);
+        return res.status(502).json({ error: errBody?.error?.message || `Anthropic API error ${claudeRes.status}` });
+      }
+
+      const data = await claudeRes.json();
+      const text = data.content?.[0]?.text?.trim() || "";
+      return res.status(200).json({ text });
+    } catch (err) {
+      logger.error("aiProxy failed", err);
+      return res.status(500).json({ error: "AI request failed" });
     }
   }
 );

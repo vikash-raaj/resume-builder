@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, Link2, Terminal } from 'lucide-react';
 import { getTranslations } from '../../../utils/resumeTranslations';
+import { DEFAULT_SECTION_ORDER } from '../../../utils/sectionOrder';
 
 const DEFAULT_ACCENT = '#0f172a';
 
@@ -25,12 +26,15 @@ export default function TechTemplate({ resume }) {
     skills = [],
     certifications = [],
     languages = [],
+    projects = [], volunteer = [], awards = [], hobbies = '', courses = [],
+    references = [], internships = [], publications = [], customSection,
   } = resume;
 
   const accent = resume.accentColor || DEFAULT_ACCENT;
   const t = getTranslations(resume.language || 'en');
   const green = '#10b981';
   const fullName = `${p.firstName || ''} ${p.lastName || ''}`.trim();
+  const order = resume.sectionOrder || DEFAULT_SECTION_ORDER;
 
   return (
     <div className="bg-white w-full min-h-full flex" style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '9px', lineHeight: '1.5', color: '#1a1a1a' }}>
@@ -153,59 +157,66 @@ export default function TechTemplate({ resume }) {
 
       {/* Right Main */}
       <div className="flex-1 py-8 px-7">
-        {/* Summary */}
-        {summary && (
-          <div className="mb-6 pb-5 border-b border-gray-100">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>About</span>
+        {(() => {
+          const mainHeading = (label) => (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{label}</span>
               <div className="flex-1 h-px bg-gray-100" />
             </div>
-            <p className="text-[9px] text-gray-600 leading-relaxed">{stripHtml(summary)}</p>
-          </div>
-        )}
-
-        {/* Experience */}
-        {experience.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.experience}</span>
-              <div className="flex-1 h-px bg-gray-100" />
-            </div>
-            <div className="space-y-5">
-              {experience.map((exp, i) => {
-                const dates = [exp.startDate, exp.current ? t.present : exp.endDate].filter(Boolean).join(' → ');
-                const desc = stripHtml(exp.description || '');
-                return (
-                  <div key={i} className="relative pl-3 border-l-2" style={{ borderColor: `${accent}20` }}>
-                    <div
-                      className="absolute -left-[5px] top-1 w-2 h-2 rounded-full"
-                      style={{ backgroundColor: accent }}
-                    />
-                    <div className="flex justify-between items-start mb-0.5">
-                      <p className="font-bold text-[10px]" style={{ color: accent }}>{exp.position}</p>
-                      {dates && <span className="text-[7.5px] text-gray-400 ml-2 whitespace-nowrap">{dates}</span>}
-                    </div>
-                    <p className="text-[8.5px] text-gray-500 mb-1.5">{exp.company}</p>
-                    {desc && (
-                      <ul className="space-y-0.5">
-                        {desc.split('\n').filter(l => l.trim()).map((line, j) => (
-                          <li key={j} className="text-[8.5px] text-gray-600 flex gap-1.5">
-                            <span style={{ color: '#10b981' }} className="flex-shrink-0 mt-0.5">›</span>
-                            {line}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+          );
+          const mainFlowSections = {
+            summary: summary && (
+              <div key="summary" className="mb-6 pb-5 border-b border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>About</span>
+                  <div className="flex-1 h-px bg-gray-100" />
+                </div>
+                <p className="text-[9px] text-gray-600 leading-relaxed">{stripHtml(summary)}</p>
+              </div>
+            ),
+            experience: experience.length > 0 && (
+              <div key="experience" className="mb-6">
+                {mainHeading(t.experience)}
+                <div className="space-y-5">
+                  {experience.map((exp, i) => {
+                    const dates = [exp.startDate, exp.current ? t.present : exp.endDate].filter(Boolean).join(' → ');
+                    const desc = stripHtml(exp.description || '');
+                    return (
+                      <div key={i} className="relative pl-3 border-l-2" style={{ borderColor: `${accent}20` }}>
+                        <div
+                          className="absolute -left-[5px] top-1 w-2 h-2 rounded-full"
+                          style={{ backgroundColor: accent }}
+                        />
+                        <div className="flex justify-between items-start mb-0.5">
+                          <p className="font-bold text-[10px]" style={{ color: accent }}>{exp.title}</p>
+                          {dates && <span className="text-[7.5px] text-gray-400 ml-2 whitespace-nowrap">{dates}</span>}
+                        </div>
+                        <p className="text-[8.5px] text-gray-500 mb-1.5">{exp.company}</p>
+                        {desc && (
+                          <ul className="space-y-0.5">
+                            {desc.split('\n').filter(l => l.trim()).map((line, j) => (
+                              <li key={j} className="text-[8.5px] text-gray-600 flex gap-1.5">
+                                <span style={{ color: '#10b981' }} className="flex-shrink-0 mt-0.5">›</span>
+                                {line}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ),
+          };
+          // Education/skills/languages live in the sidebar and stay fixed —
+          // only summary/experience share this main-column flow.
+          return order.filter((k) => mainFlowSections[k]).map((k) => mainFlowSections[k]);
+        })()}
 
         {/* Certifications */}
         {certifications.length > 0 && (
-          <div>
+          <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.certifications}</span>
               <div className="flex-1 h-px bg-gray-100" />
@@ -226,6 +237,168 @@ export default function TechTemplate({ resume }) {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {projects.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.projects}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-2">
+              {projects.map((proj, i) => (
+                <div key={i} className="text-[8.5px]">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-800">{proj.name}</span>
+                    {proj.year && <span className="text-gray-400 text-[8px]">{proj.year}</span>}
+                  </div>
+                  {proj.url && <p className="text-gray-400">{proj.url}</p>}
+                  {proj.description && <p className="text-gray-600 mt-0.5 leading-relaxed">{proj.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {volunteer.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.volunteer}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-2">
+              {volunteer.map((v, i) => (
+                <div key={i} className="text-[8.5px]">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-800">{[v.role, v.organization].filter(Boolean).join(' · ')}</span>
+                    <span className="text-gray-400 text-[8px]">{[v.startDate, v.endDate].filter(Boolean).join(' – ')}</span>
+                  </div>
+                  {v.description && <p className="text-gray-600 mt-0.5 leading-relaxed">{v.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {awards.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.awards}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-2">
+              {awards.map((a, i) => (
+                <div key={i} className="text-[8.5px]">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-800">{a.title}</span>
+                    {a.year && <span className="text-gray-400 text-[8px]">{a.year}</span>}
+                  </div>
+                  {a.issuer && <p className="text-gray-400">{a.issuer}</p>}
+                  {a.description && <p className="text-gray-600 mt-0.5 leading-relaxed">{a.description}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {internships.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.internships}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-2">
+              {internships.map((it, i) => (
+                <div key={i} className="flex justify-between text-[8.5px]">
+                  <div>
+                    <span className="font-medium text-gray-800">{it.title}</span>
+                    <p className="text-gray-500">{it.company}</p>
+                  </div>
+                  <span className="text-gray-400 text-[8px]">{[it.startDate, it.endDate].filter(Boolean).join(' – ')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {publications.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.publications}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-1.5">
+              {publications.map((pub, i) => (
+                <div key={i} className="flex justify-between text-[8.5px]">
+                  <div>
+                    <span className="font-medium text-gray-800">{pub.title}</span>
+                    {pub.publisher && <span className="text-gray-400"> — {pub.publisher}</span>}
+                  </div>
+                  {pub.year && <span className="text-gray-400 text-[8px]">{pub.year}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {courses.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.courses}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-1.5">
+              {courses.map((c, i) => (
+                <div key={i} className="flex justify-between text-[8.5px]">
+                  <div>
+                    <span className="font-medium text-gray-800">{c.name}</span>
+                    {c.institution && <span className="text-gray-400"> — {c.institution}</span>}
+                  </div>
+                  {c.year && <span className="text-gray-400 text-[8px]">{c.year}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {references.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.references}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <div className="space-y-1.5">
+              {references.map((ref, i) => (
+                <div key={i} className="flex justify-between text-[8.5px]">
+                  <div>
+                    <span className="font-medium text-gray-800">{ref.name}</span>
+                    {ref.company && <span className="text-gray-400"> — {ref.company}</span>}
+                  </div>
+                  {ref.contact && <span className="text-gray-400 text-[8px]">{ref.contact}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hobbies && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{t.hobbies}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <p className="text-[8.5px] text-gray-600 leading-relaxed">{hobbies}</p>
+          </div>
+        )}
+
+        {customSection?.content && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accent }}>{customSection.title || t.custom}</span>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+            <p className="text-[8.5px] text-gray-600 leading-relaxed whitespace-pre-line">{customSection.content}</p>
           </div>
         )}
       </div>

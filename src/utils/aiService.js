@@ -1,4 +1,7 @@
+import { auth } from '../firebase/config';
+
 const AI_KEY_STORAGE = 'resume_builder_ai_key';
+const AI_PROXY_URL = import.meta.env.VITE_AI_PROXY_FUNCTION_URL;
 
 export function getStoredAIKey() {
   return localStorage.getItem(AI_KEY_STORAGE) || '';
@@ -12,10 +15,9 @@ export function clearAIKey() {
   localStorage.removeItem(AI_KEY_STORAGE);
 }
 
-async function callClaude(prompt, systemPrompt = '', maxTokens = 600) {
-  const key = getStoredAIKey();
-  if (!key) throw new Error('NO_KEY');
-
+// Bring-your-own-key path — unchanged, still supported for anyone who has
+// pasted in their own Anthropic key (unlimited use, at their own cost).
+async function callClaudeDirect(key, prompt, systemPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -39,6 +41,34 @@ async function callClaude(prompt, systemPrompt = '', maxTokens = 600) {
 
   const data = await res.json();
   return data.content?.[0]?.text?.trim() || '';
+}
+
+// Backend-proxied path — used for any signed-in user without their own key,
+// so AI features work without requiring an Anthropic account. Server enforces
+// a free-tier monthly quota and calls Anthropic with a server-side key.
+async function callClaudeViaProxy(prompt, systemPrompt, maxTokens) {
+  const idToken = await auth.currentUser.getIdToken();
+  const res = await fetch(AI_PROXY_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, systemPrompt, maxTokens }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (err?.code === 'QUOTA_EXCEEDED') throw new Error(err.error);
+    throw new Error(err?.error || `AI request failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  return data.text || '';
+}
+
+async function callClaude(prompt, systemPrompt = '', maxTokens = 600) {
+  const key = getStoredAIKey();
+  if (key) return callClaudeDirect(key, prompt, systemPrompt, maxTokens);
+  if (auth.currentUser && AI_PROXY_URL) return callClaudeViaProxy(prompt, systemPrompt, maxTokens);
+  throw new Error('NO_KEY');
 }
 
 export async function generateBulletPoints({ jobTitle, company, description }) {
